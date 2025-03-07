@@ -1,5 +1,7 @@
 #include <stdbool.h>
 #include "./tokens.c"
+
+
 //This defines the structure of a token
 typedef struct {
     char *type;
@@ -7,6 +9,8 @@ typedef struct {
     int line;
     int column;
 } Token;
+
+
 //Constructor function that creates a token
 Token initToken(enum TOKEN_TYPE type, char *value, int line, int column)
 {
@@ -18,6 +22,7 @@ Token initToken(enum TOKEN_TYPE type, char *value, int line, int column)
     return *token; // Returns the constructed token
 }
 
+
 //Check if a character is alphanumeric
 bool alphanum(char c)
 {
@@ -25,6 +30,7 @@ bool alphanum(char c)
         return true; 
     return false;
 }
+
 
 // Check if a character is alphabetical
 bool alpha(char c)
@@ -129,6 +135,22 @@ char lookahead(Lexer *lexer)
 };
 
 
+
+// Check if a char is whitespace or not
+bool isWhitespace(Lexer *lexer)
+{
+    char c = lexer->src[lexer->pos];
+    // Check if it is a space, tab, or newline
+    if(c == ' ' || c == '\t' || c == '\n')
+        return true;
+    // If not, return false
+    return false;
+
+}
+
+
+
+
 // Analyze the next token
 Token nextToken(Lexer *lexer)
 {
@@ -193,15 +215,27 @@ Token nextToken(Lexer *lexer)
             return initToken(INT_LITERAL, val, l, c); // Return int literal
     }
 
+    if(inArray(OPERATOR_CHARS, lexer->src[lexer->pos])) //Check if token is an operator
+    {
+        while(inArray(OPERATOR_CHARS, lookahead(lexer)))
+        {
+            val += advance(lexer);
+        }
+        if(inArray(OPERATORS, val))
+            return initToken(OPERATOR, val, l, c);
+        return initToken(UNKNOWN, val, l, c);
+    }
+
     //Check if token is a misc token
     switch(lookahead(lexer)) { //Check for misc tokens
-        case '\{': return initToken(LBRACE, '{', l, c);
-        case '\}': return initToken(RBRACE, '\}', l, c);
-        case '\[': return initToken(LSQR, '\[', l, c);
-        case '\]': return initToken(RSQR, '\]', l, c);
-        case '\(': return initToken(LPAR, '\(', l, c);
-        case '\)': return initToken(RPAR, '\)', l, c);
-        case '\.': return initToken(DOT, '\.', l, c);
+        case '\{': return initToken(LBRACE, "{", l, c);
+        case '\}': return initToken(RBRACE, "}", l, c);
+        case '\[': return initToken(LSQR, "[", l, c);
+        case '\]': return initToken(RSQR, "]", l, c);
+        case '\(': return initToken(LPAR, "(", l, c);
+        case '\)': return initToken(RPAR, ")", l, c);
+        case '\.': return initToken(DOT, ".", l, c);
+
        //If not, then it is unknown 
         default: return initToken(UNKNOWN, lexer->src[lexer->pos], l, c);
     }
