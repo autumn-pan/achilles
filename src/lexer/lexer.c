@@ -162,19 +162,19 @@ Token nextToken(Lexer *lexer)
     int l = lexer->line;
     int c = lexer->column;
     //Checks if it is a string
-    if(lookahead(lexer) == '"')
+    if(lexer->src[lexer->pos] == '"')
     {
         //Excludes the first quotation mark
         advance(lexer);
         while (true) // Loops until broken
         {
             //If the quotation mark has a \ behind it. If so, count it as part of the string
-            if (peek(lexer) == '"' && lexer->src[lexer->pos] == '\\')
+            if (lookahead(lexer) == '"' && lexer->src[lexer->pos] == '\\')
             {
                 val += advance(lexer);
 
             } 
-            else if (peek(lexer) == '"') // Terminates string
+            else if (lexer->src[lexer->pos] == '"') // Terminates string
             {
                 advance(lexer);
                 break;
@@ -186,7 +186,7 @@ Token nextToken(Lexer *lexer)
         }
         return initToken(STR_LITERAL, val, l, c); // returns string literal
     }
-    else if (alpha(lookahead(lexer)) || lexer->src[lexer->pos] == '_') // Checks if it's alphanumeric; will construct keywords and identifiers
+    else if (alpha(lexer->src[lexer->pos]) || lexer->src[lexer->pos] == '_') // Checks if it's alphanumeric; will construct keywords and identifiers
     {
         while(alphanum(lexer->src[lexer->pos]) || lexer->src[lexer->pos] == '_')
         {
@@ -196,16 +196,16 @@ Token nextToken(Lexer *lexer)
             return initToken(KEYWORD, val, l, c);
         return initToken(IDENTIFIER, val, l, c);
     }
-    else if(num(lookahead(lexer))) //Checks for a numeric literal
+    else if(num(lexer->src[lexer->pos])) //Checks for a numeric literal
     {
-        while(num(lookahead(lexer))) //Initiates the first component of the literal
+        while(num(lexer->src[lexer->pos])) //Initiates the first component of the literal
         {
             val += advance(lexer);
         }
-        if(lookahead(lexer) =='.') //If a dot is found, then it is a float
+        if(lexer->src[lexer->pos] =='.') //If a dot is found, then it is a float
         {
             type = FLOAT_LITERAL;
-            while(num(lookahead(lexer)))
+            while(num(lexer->src[lexer->pos]))
             {
                 val += advance(lexer); //Construct the second part of the float
             } 
@@ -217,17 +217,18 @@ Token nextToken(Lexer *lexer)
 
     if(inArray(OPERATOR_CHARS, lexer->src[lexer->pos])) //Check if token is an operator
     {
-        while(inArray(OPERATOR_CHARS, lookahead(lexer)))
+        while(inArray(OPERATOR_CHARS, lexer->src[lexer->pos]))
         {
             val += advance(lexer);
         }
+
         if(inArray(OPERATORS, val))
             return initToken(OPERATOR, val, l, c);
         return initToken(UNKNOWN, val, l, c);
     }
 
     //Check if token is a misc token
-    switch(lookahead(lexer)) { //Check for misc tokens
+    switch(lexer->src[lexer->pos]) { //Check for misc tokens
         case '\{': return initToken(LBRACE, "{", l, c);
         case '\}': return initToken(RBRACE, "}", l, c);
         case '\[': return initToken(LSQR, "[", l, c);
@@ -239,5 +240,4 @@ Token nextToken(Lexer *lexer)
        //If not, then it is unknown 
         default: return initToken(UNKNOWN, lexer->src[lexer->pos], l, c);
     }
-    
 }
