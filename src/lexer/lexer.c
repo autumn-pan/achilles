@@ -93,7 +93,7 @@ Lexer * init_lexer(const char *src) {
 bool inArray(const char **arr, const char *key)
 {
     // For every string of the array
-    for(int i = 0; arr[i] != NULL; i++) 
+    for(int i = 0; i < sizeof(arr)/sizeof(arr[0]); i++) 
     {
         // Compare each value with the key
         if(strcmp((const char *)arr[i], key) == 0)
@@ -106,7 +106,7 @@ bool inArray(const char **arr, const char *key)
 bool charInArray(const char *arr, const char key)
 {
     // For every char of the array
-    for(int i = 0; arr[i] != NULL; i++) 
+    for(int i = 0; i < sizeof(arr)/sizeof(arr[0]); i++) 
     {
         // Compare each value with the key
         if((int)arr[i] == (int)key)
@@ -117,19 +117,18 @@ bool charInArray(const char *arr, const char key)
 }
 
 
-//Move the lexer one character forward
+//Returns current char, moves the lexer one character forward
 char advance(Lexer *lexer)
 {
     // Checks for EOF
     if(lexer->pos >= lexer->length)
         return '\0';
     
-    // If it is not the EOF, move the position forward
-    lexer->pos++;
-
-    //Handle new lines
 
     char c = lexer->src[lexer->pos];
+
+    // If it is not the EOF, move the position forward
+    lexer->pos++;
     // If current char is EOL
     if(c == '\n')
     {
@@ -201,7 +200,7 @@ Token nextToken(Lexer *lexer)
             } 
             else if (lexer->src[lexer->pos] == '"') // Terminates string
             {
-                strcat(val, toString(advance(lexer))); 
+                advance(lexer); // Excludes the last quotation mark
                 break;
             }
             else // builds the str
@@ -227,9 +226,13 @@ Token nextToken(Lexer *lexer)
         {
             strcat(val, toString(advance(lexer))); 
         }
-        if(lexer->src[lexer->pos] =='.') //If a dot is found, then it is a float
+        if(lexer->src[lexer->pos] == '.') //If a dot is found, then it is a float
         {
             type = FLOAT_LITERAL;
+
+            advance(lexer); // Excludes the dot
+            strcat(val, "."); // Adds the dot to the float
+
             while(num(lexer->src[lexer->pos]))
             {
                 strcat(val, toString(advance(lexer))); //Construct the second part of the float
@@ -270,11 +273,14 @@ Token nextToken(Lexer *lexer)
         }
     }
 }
+
+
 //For testing purposes
 int main() {
-    Lexer *lexer = init_lexer("alpha");
+    Lexer *lexer = init_lexer("<");
     Token token = nextToken(lexer);
     printf("%s\n", token.value);
+
     free(token.value);
     free(lexer);
     return 0;
