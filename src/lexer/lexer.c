@@ -1,10 +1,13 @@
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "./tokens.c"
 
 
 //This defines the structure of a token
 typedef struct {
-    char *type;
+    enum TOKEN_TYPE type;
     char *value;
     int line;
     int column;
@@ -14,12 +17,12 @@ typedef struct {
 //Constructor function that creates a token
 Token initToken(enum TOKEN_TYPE type, char *value, int line, int column)
 {
-    Token *token = (Token *)malloc(sizeof(Token)); // Initialize token struct
-    token->type = type; // Set type
-    token->value = strdup(value); // Set internal value
-    token->line = line; // Line value for error handling
-    token->column = column; // Col value for error handling
-    return *token; // Returns the constructed token
+    Token token; // Initialize token struct
+    token.type = type; // Set type
+    token.value = strdup(value); // Set internal value
+    token.line = line; // Line value for error handling
+    token.column = column; // Col value for error handling
+    return token; // Returns the constructed token
 }
 
 
@@ -45,7 +48,7 @@ bool alpha(char c)
 bool num(char c)
 {
     // Checks if its ASCII value matchs that of a digit
-    if(c >= 48 && c <= 58)
+    if(c >= 48 && c <= 57)
         return true;
 
     //If not, return false
@@ -64,22 +67,22 @@ typedef struct {
 } Lexer;
 
 // Initialize the lexer
-Lexer init_lexer(const char *src) {
+Lexer * init_lexer(const char *src) {
     //Initialize the lexer
-    Lexer lexer; 
+    Lexer *lexer = (Lexer *)malloc(sizeof(Lexer)); 
     // Set the source code
-    lexer.src = src;
+    lexer->src = src;
     //Set the length
-    lexer.length = strlen(src);
+    lexer->length = strlen(src);
 
     //Set the current position that the lexer is on
-    lexer.pos = 0;
+    lexer->pos = 0;
 
     //Set the line
-    lexer.line = 1;
+    lexer->line = 1;
 
     //Set the column
-    lexer.column = 1;
+    lexer->column = 1;
 
     //Return the finished lexer
     return lexer;
@@ -87,18 +90,32 @@ Lexer init_lexer(const char *src) {
 
 
 //Checks if a string is in an array
-bool inArray(char *arr, char *key)
+bool inArray(const char **arr, const char *key)
 {
     // For every string of the array
-    for(int i = 0; i < sizeof(arr); i++) 
+    for(int i = 0; arr[i] != NULL; i++) 
     {
         // Compare each value with the key
-        if(strcmp(arr[i],key))
+        if(strcmp((const char *)arr[i], key) == 0)
             return true; //If they are equal, return true
     }
     // If no string matches, return false
     return false;
 }
+
+bool charInArray(const char *arr, const char key)
+{
+    // For every char of the array
+    for(int i = 0; arr[i] != NULL; i++) 
+    {
+        // Compare each value with the key
+        if((int)arr[i] == (int)key)
+            return true; //If they are equal, return true
+    }
+    // If no string matches, return false
+    return false;
+}
+
 
 //Move the lexer one character forward
 char advance(Lexer *lexer)
@@ -148,6 +165,14 @@ bool isWhitespace(Lexer *lexer)
 
 }
 
+char * toString(const char character)
+{
+    static char str[2];
+    str[0] = character;
+    str[1] = '\0';
+    return str;
+}
+
 
 
 
@@ -157,7 +182,7 @@ Token nextToken(Lexer *lexer)
     // This stores the Token type
     enum TOKEN_TYPE type;
     // This is where the values for tokens will be stored.
-    char *val = "";
+    char val[256] = "";
     // Line and Column
     int l = lexer->line;
     int c = lexer->column;
@@ -171,17 +196,17 @@ Token nextToken(Lexer *lexer)
             //If the quotation mark has a \ behind it. If so, count it as part of the string
             if (lookahead(lexer) == '"' && lexer->src[lexer->pos] == '\\')
             {
-                val += advance(lexer);
+                strcat(val, toString(advance(lexer))); 
 
             } 
             else if (lexer->src[lexer->pos] == '"') // Terminates string
             {
-                advance(lexer);
+                strcat(val, toString(advance(lexer))); 
                 break;
             }
             else // builds the str
             {
-                val += advance(lexer);
+                strcat(val, toString(advance(lexer))); 
             }
         }
         return initToken(STR_LITERAL, val, l, c); // returns string literal
@@ -190,7 +215,7 @@ Token nextToken(Lexer *lexer)
     {
         while(alphanum(lexer->src[lexer->pos]) || lexer->src[lexer->pos] == '_')
         {
-            val += advance(lexer);
+            strcat(val, toString(advance(lexer))); 
         }
         if(inArray(KEYWORDS, val))
             return initToken(KEYWORD, val, l, c);
@@ -200,14 +225,14 @@ Token nextToken(Lexer *lexer)
     {
         while(num(lexer->src[lexer->pos])) //Initiates the first component of the literal
         {
-            val += advance(lexer);
+            strcat(val, toString(advance(lexer))); 
         }
         if(lexer->src[lexer->pos] =='.') //If a dot is found, then it is a float
         {
             type = FLOAT_LITERAL;
             while(num(lexer->src[lexer->pos]))
             {
-                val += advance(lexer); //Construct the second part of the float
+                strcat(val, toString(advance(lexer))); //Construct the second part of the float
             } 
             return initToken(FLOAT_LITERAL, val, l, c); // Return float literal
         }
@@ -215,11 +240,11 @@ Token nextToken(Lexer *lexer)
             return initToken(INT_LITERAL, val, l, c); // Return int literal
     }
 
-    if(inArray(OPERATOR_CHARS, lexer->src[lexer->pos])) //Check if token is an operator
+    if(charInArray(OPERATOR_CHARS, lexer->src[lexer->pos])) //Check if token is an operator
     {
-        while(inArray(OPERATOR_CHARS, lexer->src[lexer->pos]))
+        while(charInArray(OPERATOR_CHARS, lexer->src[lexer->pos]))
         {
-            val += advance(lexer);
+            strcat(val, toString(advance(lexer)));
         }
 
         if(inArray(OPERATORS, val))
@@ -229,15 +254,28 @@ Token nextToken(Lexer *lexer)
 
     //Check if token is a misc token
     switch(lexer->src[lexer->pos]) { //Check for misc tokens
-        case '\{': return initToken(LBRACE, "{", l, c);
-        case '\}': return initToken(RBRACE, "}", l, c);
-        case '\[': return initToken(LSQR, "[", l, c);
-        case '\]': return initToken(RSQR, "]", l, c);
-        case '\(': return initToken(LPAR, "(", l, c);
-        case '\)': return initToken(RPAR, ")", l, c);
-        case '\.': return initToken(DOT, ".", l, c);
+        case '{': return initToken(LBRACE, "{", l, c);
+        case '}': return initToken(RBRACE, "}", l, c);
+        case '[': return initToken(LSQR, "[", l, c);
+        case ']': return initToken(RSQR, "]", l, c);
+        case '(': return initToken(LPAR, "(", l, c);
+        case ')': return initToken(RPAR, ")", l, c);
+        case '.': return initToken(DOT, ".", l, c);
 
        //If not, then it is unknown 
-        default: return initToken(UNKNOWN, lexer->src[lexer->pos], l, c);
+        default: {
+            char unknown[2] = {lexer->src[lexer->pos], '\0'};
+            advance(lexer);
+            return initToken(UNKNOWN, (const char *)lexer->src[lexer->pos], l, c);
+        }
     }
+}
+//For testing purposes
+int main() {
+    Lexer *lexer = init_lexer("alpha");
+    Token token = nextToken(lexer);
+    printf("%s\n", token.value);
+    free(token.value);
+    free(lexer);
+    return 0;
 }

@@ -20,48 +20,38 @@ typedef enum TOKEN_TYPE {
     DOT
 };
 
-const char *KEYWORDS = {
+// Corrected the syntax for the array of keywords
+const char *KEYWORDS[] = {
     "function",
     "return",
-
     "if",
     "else",
-
     "class",
     "constructor",
-
     "static",
-    
     "const",
-    "mutable"
-
+    "mutable",
     "public",
     "private",
-
     "while",
     "for",
-
     "break",
     "continue",
-
     "extends",
-    
     "float",
     "int",
-    "string"
+    "string",
     "char",
     "bool",
     "void",
-
     "in",
     "instanceof",
-
     "new",
-
     "enum"
 };
 
-const char *OPERATORS = {//List of each operator
+// Corrected the syntax for the array of operators
+const char *OPERATORS[] = {//List of each operator
     "+",
     "-",
     "*",
@@ -71,7 +61,6 @@ const char *OPERATORS = {//List of each operator
     "**",
     ">>",
     "<<",
-
     "==",
     "<",
     ">",
@@ -81,11 +70,10 @@ const char *OPERATORS = {//List of each operator
     "-=",
     "*=",
     "/=",
-
     "="
 };
 
-const char OPERATOR_CHARS = {//Every operator character
+const char OPERATOR_CHARS[] = {//Every operator character
     '+',
     '-',
     '*',
@@ -95,13 +83,14 @@ const char OPERATOR_CHARS = {//Every operator character
     '='
 };
 
-const char *GROUPER_TOKENS = {//List of grouper values
-    "{",
-    "}",
-    "[",
-    "]",
-    "(",
-    ")",
-    "."
+// Corrected the syntax for the array of grouper tokens
+const char GROUPER_TOKENS[7] = {//List of grouper values
+    '{',
+    '}',
+    '[',
+    ']',
+    '(',
+    ')',
+    '.'
 };
 
