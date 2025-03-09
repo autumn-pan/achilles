@@ -144,7 +144,7 @@ char advance(Lexer *lexer)
 char lookahead(Lexer *lexer) 
 {
     // If it is not the EOF, return the next value
-    if(lexer->pos < lexer->length)
+    if(lexer->pos < lexer->length - 1)
         return lexer->src[lexer->pos + 1];
     //Otherwise, return EOF
     return '\0';
@@ -285,11 +285,19 @@ int main() {
     Lexer *lexer = init_lexer("hello world");
     Token token;
 
-    while (token.type != END_OF_FILE) 
+    while (token.type != END_OF_FILE)  // While the lexer is not at the end of the file 
     {
+        // Skip whitespace
+        while (isWhitespace(lexer))
+            advance(lexer);
+
+        // Take the next token
         token = nextToken(lexer);
 
+        // Print the token
         printf("Type: %s, Value:%s\n", getTokenType(token.type), token.value);
+
+        // Free the allocated memory
         free(token.value);
     }
 
