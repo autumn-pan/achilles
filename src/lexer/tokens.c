@@ -17,7 +17,8 @@ typedef enum TOKEN_TYPE {
     RPAR,
     UNKNOWN,
     EOL,
-    DOT
+    DOT,
+    END_OF_FILE
 };
 
 // List of Keywords
@@ -93,3 +94,24 @@ const char GROUPER_TOKENS[7] = {//List of grouper values
     '.'
 };
 
+//Return token type as a string
+const char* getTokenType(enum TOKEN_TYPE type) {
+    switch (type) {
+        case END_OF_FILE: return "END_OF_FILE";
+        case STR_LITERAL: return "STR_LITERAL";
+        case KEYWORD: return "KEYWORD";
+        case IDENTIFIER: return "IDENTIFIER";
+        case FLOAT_LITERAL: return "FLOAT_LITERAL";
+        case INT_LITERAL: return "INT_LITERAL";
+        case OPERATOR: return "OPERATOR";
+        case LBRACE: return "LBRACE";
+        case RBRACE: return "RBRACE";
+        case LSQR: return "LSQR";
+        case RSQR: return "RSQR";
+        case LPAR: return "LPAR";
+        case RPAR: return "RPAR";
+        case DOT: return "DOT";
+        case UNKNOWN: return "UNKNOWN";
+        default: return "UNKNOWN";
+    }
+}

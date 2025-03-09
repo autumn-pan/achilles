@@ -185,6 +185,12 @@ Token nextToken(Lexer *lexer)
     // Line and Column
     int l = lexer->line;
     int c = lexer->column;
+
+
+    //Check for EOF
+    if(lexer->pos >= lexer->length)
+        return initToken(END_OF_FILE, "", l, c);
+
     //Checks if it is a string
     if(lexer->src[lexer->pos] == '"')
     {
@@ -267,9 +273,8 @@ Token nextToken(Lexer *lexer)
 
        //If not, then it is unknown 
         default: {
-            char unknown[2] = {lexer->src[lexer->pos], '\0'};
-            advance(lexer);
-            return initToken(UNKNOWN, (const char *)lexer->src[lexer->pos], l, c);
+            strcat(val, toString(advance(lexer)));
+            return initToken(UNKNOWN, val, l, c);
         }
     }
 }
@@ -277,13 +282,17 @@ Token nextToken(Lexer *lexer)
 
 //For testing purposes
 int main() {
-    Lexer *lexer = init_lexer("<");
-    Token token = nextToken(lexer);
-    printf("%s\n", token.value);
+    Lexer *lexer = init_lexer("hello world");
+    Token token;
 
+    while (token.type != END_OF_FILE) 
+    {
+        token = nextToken(lexer);
 
-    
-    free(token.value);
+        printf("Type: %s, Value:%s\n", getTokenType(token.type), token.value);
+        free(token.value);
+    }
+
     free(lexer);
     return 0;
 }
