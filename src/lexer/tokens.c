@@ -1,6 +1,6 @@
 #include <stdbool.h>
 //This file contains the tokens for the lexer, as well as keywords, operators, and grouper tokens.
-typedef enum {
+typedef enum TOKEN_TYPE {
     KEYWORD,
     IDENTIFIER,
     STR_LITERAL,
@@ -18,9 +18,9 @@ typedef enum {
     UNKNOWN,
     EOL,
     DOT
-} TOKEN_TYPE;
+};
 
-// Corrected the syntax for the array of keywords
+// List of Keywords
 const char *KEYWORDS[] = {
     "function",
     "return",
@@ -50,7 +50,7 @@ const char *KEYWORDS[] = {
     "enum"
 };
 
-// Corrected the syntax for the array of operators
+// List of Operators
 const char *OPERATORS[] = {//List of each operator
     "+",
     "-",
@@ -83,7 +83,6 @@ const char OPERATOR_CHARS[] = {//Every operator character
     '='
 };
 
-// Corrected the syntax for the array of grouper tokens
 const char GROUPER_TOKENS[7] = {//List of grouper values
     '{',
     '}',

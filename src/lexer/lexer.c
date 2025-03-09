@@ -281,6 +281,8 @@ int main() {
     Token token = nextToken(lexer);
     printf("%s\n", token.value);
 
+
+    
     free(token.value);
     free(lexer);
     return 0;
