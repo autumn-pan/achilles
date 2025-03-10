@@ -18,7 +18,9 @@ typedef enum TOKEN_TYPE {
     UNKNOWN,
     EOL,
     DOT,
-    END_OF_FILE
+    END_OF_FILE,
+    COMMA,
+    SEMI
 };
 
 // List of Keywords
@@ -91,7 +93,9 @@ const char GROUPER_TOKENS[7] = {//List of grouper values
     ']',
     '(',
     ')',
-    '.'
+    '.',
+    ';',
+    ','
 };
 
 //Return token type as a string

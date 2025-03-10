@@ -270,6 +270,8 @@ Token nextToken(Lexer *lexer)
         case '(': return initToken(LPAR, "(", l, c);
         case ')': return initToken(RPAR, ")", l, c);
         case '.': return initToken(DOT, ".", l, c);
+        case ';': return initToken(SEMI, ";", l, c);
+        case ',': return initToken(COMMA, ",", l, c);
 
        //If not, then it is unknown 
         default: {
@@ -282,7 +284,7 @@ Token nextToken(Lexer *lexer)
 
 //For testing purposes
 int main() {
-    Lexer *lexer = init_lexer("hello world");
+    Lexer *lexer = init_lexer("1 + 1 = 69");
     Token token;
 
     while (token.type != END_OF_FILE)  // While the lexer is not at the end of the file 
