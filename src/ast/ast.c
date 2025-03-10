@@ -12,10 +12,7 @@ typedef enum {
     STRING,
     BOOL,
     CHAR,
-    IDENTIFIER,
-    OPERATOR,
-    FUNCTION_CALL,
-    CONSTRUCTOR_CALL
+    OPERATOR
 } NodeType;
 
 // Define the types of statements
@@ -36,6 +33,10 @@ typedef enum {
     ASSIGNMENT_STMT,
     EXPRESSION_STMT,
     BLOCK_STMT,
+
+    FUNCTION_CALL,
+    CONSTRUCTOR_CALL,
+    VARIABLE_CALL,
 } StatementType;
 
 // Define the structure of an AST node
@@ -81,10 +82,10 @@ ASTNode* createStringNode(int str) {
     return node;
 }
 
-ASTNode* createIdentifierNode(char *id) {
+ASTNode* createBoolNode(int bool) {
     ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));
-    node->type = IDENTIFIER;
-    node->data.identifier = strdup(id);
+    node->type = BOOL;
+    node->data.intval = bool;
     return node;
 }
 
@@ -119,3 +120,4 @@ ASTNode* createConstructorCallNode(char *id) {
     node->data.identifier = strdup(id);
     return node;
 }
+

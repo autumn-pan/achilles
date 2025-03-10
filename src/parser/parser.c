@@ -55,3 +55,26 @@ bool match_value(parser *p, char *value) {
     return false;
 }
 
+
+// If applicable, this function will consume and create a new AST node that declares a new variable
+void parse_variable_declaration(parser *parser) {
+    Token token = *get_current_token(parser);
+    if(!(match_value(parser, "int") || match_value(parser, "string") || match_value(parser, "char") || match_value(parser, "bool")))
+        return;
+    if(!match(parser, COLON))
+        return;
+    if(!match(parser, IDENTIFIER))
+        return;
+    if(!match(parser, SEMI))
+    {
+        if(!match_value(parser, '='))
+            return;
+        if(!match(parser, INT_LITERAL) && !match(parser, STR_LITERAL) && !match(parser, CHAR_LITERAL) && !match(parser, BOOL_LITERAL))
+            return;
+        if(!match(parser, SEMI))
+            return;
+    }
+
+
+    
+}

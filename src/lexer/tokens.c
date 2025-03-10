@@ -1,6 +1,6 @@
 #include <stdbool.h>
 //This file contains the tokens for the lexer, as well as keywords, operators, and grouper tokens.
-typedef enum TOKEN_TYPE {
+typedef enum TOKEN_TYPE{
     KEYWORD,
     IDENTIFIER,
     STR_LITERAL,
