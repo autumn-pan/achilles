@@ -93,7 +93,7 @@ Lexer * init_lexer(const char *src) {
 bool inArray(const char **arr, const char *key)
 {
     // For every string of the array
-    for(int i = 0; i < sizeof(arr)/sizeof(arr[0]); i++) 
+    for(int i = 0; arr[i] != '\0'; i++) 
     {
         // Compare each value with the key
         if(strcmp((const char *)arr[i], key) == 0)
@@ -106,7 +106,7 @@ bool inArray(const char **arr, const char *key)
 bool charInArray(const char *arr, const char key)
 {
     // For every char of the array
-    for(int i = 0; i < sizeof(arr)/sizeof(arr[0]); i++) 
+    for(int i = 0; arr[i] != '\0'; i++) 
     {
         // Compare each value with the key
         if((int)arr[i] == (int)key)
@@ -263,15 +263,17 @@ Token nextToken(Lexer *lexer)
 
     //Check if token is a misc token
     switch(lexer->src[lexer->pos]) { //Check for misc tokens
-        case '{': return initToken(LBRACE, "{", l, c);
-        case '}': return initToken(RBRACE, "}", l, c);
-        case '[': return initToken(LSQR, "[", l, c);
-        case ']': return initToken(RSQR, "]", l, c);
-        case '(': return initToken(LPAR, "(", l, c);
-        case ')': return initToken(RPAR, ")", l, c);
-        case '.': return initToken(DOT, ".", l, c);
-        case ';': return initToken(SEMI, ";", l, c);
-        case ',': return initToken(COMMA, ",", l, c);
+        case '{': advance(lexer); return initToken(LBRACE, "{", l, c);
+        case '}': advance(lexer); return initToken(RBRACE, "}", l, c);
+        case '[': advance(lexer); return initToken(LSQR, "[", l, c);
+        case ']': advance(lexer); return initToken(RSQR, "]", l, c);
+        case '(': advance(lexer); return initToken(LPAR, "(", l, c);
+        case ')': advance(lexer); return initToken(RPAR, ")", l, c);
+        case '.': advance(lexer); return initToken(DOT, ".", l, c);
+        case ';': advance(lexer); return initToken(SEMI, ";", l, c);
+        case ',': advance(lexer); return initToken(COMMA, ",", l, c);
+        case ':': advance(lexer); return initToken(COLON, ":", l, c);
+        case '\n': advance(lexer); return initToken(EOL, "\n", l, c);
 
        //If not, then it is unknown 
         default: {
@@ -284,7 +286,7 @@ Token nextToken(Lexer *lexer)
 
 //For testing purposes
 int main() {
-    Lexer *lexer = init_lexer("1 + 1 = 69");
+    Lexer *lexer = init_lexer("int:num = 5");
     Token token;
 
     while (token.type != END_OF_FILE)  // While the lexer is not at the end of the file 
@@ -297,7 +299,7 @@ int main() {
         token = nextToken(lexer);
 
         // Print the token
-        printf("Type: %s, Value:%s\n", getTokenType(token.type), token.value);
+        printf("Type: %s, Value: %s \n", getTokenType(token.type), token.value);
 
         // Free the allocated memory
         free(token.value);

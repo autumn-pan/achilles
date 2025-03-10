@@ -20,7 +20,8 @@ typedef enum TOKEN_TYPE {
     DOT,
     END_OF_FILE,
     COMMA,
-    SEMI
+    SEMI,
+    COLON
 };
 
 // List of Keywords
@@ -86,7 +87,7 @@ const char OPERATOR_CHARS[] = {//Every operator character
     '='
 };
 
-const char GROUPER_TOKENS[7] = {//List of grouper values
+const char GROUPER_TOKENS[] = {//List of grouper values
     '{',
     '}',
     '[',
@@ -95,7 +96,8 @@ const char GROUPER_TOKENS[7] = {//List of grouper values
     ')',
     '.',
     ';',
-    ','
+    ',',
+    ':'
 };
 
 //Return token type as a string
@@ -115,7 +117,9 @@ const char* getTokenType(enum TOKEN_TYPE type) {
         case LPAR: return "LPAR";
         case RPAR: return "RPAR";
         case DOT: return "DOT";
+        case COLON: return "COLON";
         case UNKNOWN: return "UNKNOWN";
+
         default: return "UNKNOWN";
     }
 }
