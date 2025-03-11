@@ -4,6 +4,7 @@
 #include <string.h>
 #include "../lexer/lexer.c"
 #include "../lexer/tokens.c"
+#include "../ast/ast.c"
 
 typedef struct {
     int pos;
@@ -56,9 +57,32 @@ bool match_value(parser *p, char *value) {
 }
 
 
+
+
+
+// If applicable, this function will create a literal node
+void parse_literal(parser *parser) {
+    Token token = *get_current_token(parser);
+    if(match(parser, INT_LITERAL)) {
+        createIntNode(token.value);
+    }
+    else if(match(parser, STR_LITERAL)) {
+        createStringNode(token.value);
+    }
+    else if(match(parser, CHAR_LITERAL)) {
+        createCharNode(token.value);
+    }
+    else if(match(parser, BOOL_LITERAL)) {
+        createBoolNode(token.value);
+    }
+}
+
 // If applicable, this function will consume and create a new AST node that declares a new variable
 void parse_variable_declaration(parser *parser) {
     Token token = *get_current_token(parser);
+
+    bool null = false;
+
     if(!(match_value(parser, "int") || match_value(parser, "string") || match_value(parser, "char") || match_value(parser, "bool")))
         return;
     if(!match(parser, COLON))
@@ -74,7 +98,40 @@ void parse_variable_declaration(parser *parser) {
         if(!match(parser, SEMI))
             return;
     }
-
-
-    
+    switch(token.type) {
+        case INT_LITERAL:
+            createVariableDeclarationNode(token.value, NULL);
+            break;
+        case STR_LITERAL:
+            createVariableDeclarationNode(token.value, NULL);
+            break;
+        case CHAR_LITERAL:
+            createVariableDeclarationNode(token.value, NULL);
+            break;
+        case BOOL_LITERAL:
+            createVariableDeclarationNode(token.value, NULL);
+            break;
+        default:
+            break;
+    }
+    ASTNode *node;
+    switch(token.type) {
+        case INT_LITERAL:
+            node = createIntNode(token.value);
+            break;
+        case STR_LITERAL:
+            node = createStringNode(token.value);
+            break;
+        case CHAR_LITERAL:
+            node = createCharNode(token.value);
+            break;
+        case BOOL_LITERAL:
+            node = createBoolNode(token.value);
+            break;
+        default:
+            null = true;
+            break;
+    }
+    createVariableDeclarationNode(token.value, node);
 }
+

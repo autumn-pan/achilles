@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-
+#include "../lexer/lexer.c"
+#include "../lexer/tokens.c"
 
 // Define the types of AST nodes
 typedef enum {
@@ -82,10 +83,10 @@ ASTNode* createStringNode(int str) {
     return node;
 }
 
-ASTNode* createBoolNode(int bool) {
+ASTNode* createBoolNode(int boolean) {
     ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = BOOL;
-    node->data.intval = bool;
+    node->data.intval = boolean;
     return node;
 }
 
@@ -118,6 +119,32 @@ ASTNode* createConstructorCallNode(char *id) {
     ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = CONSTRUCTOR_CALL;
     node->data.identifier = strdup(id);
+    return node;
+}
+
+ASTNode* createVariableDeclarationNode(char *id, ASTNode *value) {
+    ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));
+    node->type = VARIABLE_DECL;
+    node->data.identifier = strdup(id);
+    node->numChildren = 1;
+    node->children = (ASTNode**)malloc(sizeof(ASTNode*) * 1);
+    switch(value->type) {
+        case INT_LITERAL:
+            node->children[0] = createIntNode(value->data.intval);
+            break;
+        case FLOAT_LITERAL:
+            node->children[0] = createFloatNode(value->data.floatval);
+            break;
+        case CHAR_LITERAL:
+            node->children[0] = createCharNode(value->data.charval);
+            break;
+        case STR_LITERAL:
+            node->children[0] = createStringNode(value->data.strval);
+            break;
+        case BOOL_LITERAL:
+            node->children[0] = createBoolNode(value->data.intval);
+            break;
+    }
     return node;
 }
 
