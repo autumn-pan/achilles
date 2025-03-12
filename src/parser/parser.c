@@ -237,19 +237,9 @@ ASTNode * parse_class_declaration(parser *parser)
     Token token = *get_current_token(parser);
     char * id = strdup(token.value);
 
-    ASTNode * body;
-    if(!match(parser, LBRACE))
+    ASTNode * body = parse_block(parser);
+    if(body == NULL)
         return NULL;
-    while(!match(parser, RBRACE))
-    {
-        ASTNode * stmt = parse_statement(parser);
-        if(stmt == NULL)
-            return NULL;
-        if(body == NULL)
-            body = stmt;
-        else
-            appendNode(body, stmt);
-    }
 
     return create_class_declaration_node(id, body);
 }
@@ -273,6 +263,14 @@ ASTNode * parse_constructor_declaration(parser *parser)
             appendNode(args, arg);
     }
 
+    ASTNode * body = parse_block(parser);
+    if(body == NULL)
+        return NULL;
+    return createConstructorDeclarationNode(args, body);
+}
+
+ASTNode * parse_block(parser * parser)
+{
     ASTNode * body;
     if(!match(parser, LBRACE))
         return NULL;
@@ -286,4 +284,59 @@ ASTNode * parse_constructor_declaration(parser *parser)
         else
             appendNode(body, stmt);
     }
+    return createBlockNode(body);
+}
+
+ASTNode * parse_statement(parser * parser)
+{
+    if(parse_variable_declaration(parser) != NULL)
+        return parse_variable_declaration(parser);
+    else if(parse_function_declaration(parser) != NULL)
+        return parse_function_declaration(parser);
+    else if(parse_function_call(parser) != NULL)
+        return parse_function_call(parser);
+    else if(parse_class_declaration(parser) != NULL)
+        return parse_class_declaration;
+    else if(parse_constructor_declaration(parser) != NULL)
+        return parse_constructor_declaration(parser);
+    else if(parse_block(parser) != NULL)
+        return parse_block(parser);
+    else if(parse_literal(parser) != NULL)
+        return parse_literal(parser);
+    else if(parse_variable_call(parser) != NULL)
+        return parse_variable_call(parser);
+    else
+        return NULL;
+}
+
+
+
+ASTNode * parse_expression(parser * parser)
+{
+    parse_term(parser);
+}
+
+
+ASTNode * parse_term(parser * parser)
+{
+    parse_factor(parser);
+}
+
+
+ASTNode * parse_factor(parser * parser)
+{
+    if(match(parser, LPAR))
+    {
+        parse_expression(parser);
+    }
+    
+    else if(parse_literal(parser) != NULL)
+        return parse_literal(parser);
+    else if(parse_variable_call(parser) != NULL)
+        return parse_variable_call(parser);
+    else if(parse_function_call(parser) != NULL)
+        return parse_function_call(parser);
+    else
+        return NULL;
+
 }
