@@ -61,7 +61,7 @@ bool match_value(parser *p, char *value) {
 
 
 // If applicable, this function will create a literal node
-void parse_literal(parser *parser) {
+ASTNode * parse_literal(parser *parser) {
     Token token = *get_current_token(parser);
     if(match(parser, INT_LITERAL)) {
         createIntNode(token.value);
@@ -78,25 +78,25 @@ void parse_literal(parser *parser) {
 }
 
 // If applicable, this function will consume and create a new AST node that declares a new variable
-void parse_variable_declaration(parser *parser) {
+ASTNode * parse_variable_declaration(parser *parser) {
     Token token = *get_current_token(parser);
 
     bool null = false;
 
     if(!(match_value(parser, "int") || match_value(parser, "string") || match_value(parser, "char") || match_value(parser, "bool")))
-        return;
+        return NULL;
     if(!match(parser, COLON))
-        return;
+        return NULL;
     if(!match(parser, IDENTIFIER))
-        return;
+        return NULL;
     if(!match(parser, SEMI))
     {
         if(!match_value(parser, '='))
-            return;
+            return NULL;
         if(!match(parser, INT_LITERAL) && !match(parser, STR_LITERAL) && !match(parser, CHAR_LITERAL) && !match(parser, BOOL_LITERAL))
-            return;
+            return NULL;
         if(!match(parser, SEMI))
-            return;
+            return NULL;
     }
     switch(token.type) {
         case INT_LITERAL:
@@ -135,3 +135,155 @@ void parse_variable_declaration(parser *parser) {
     createVariableDeclarationNode(token.value, node);
 }
 
+ASTNode * parse_variable_call(parser * parser) 
+{
+    Token token = *get_current_token(parser);
+    if(!match(parser, IDENTIFIER))
+        return NULL;
+    return createVariableCallNode(token.value);
+}
+
+// If applicable, this function will consume and create a new AST node that declares a new function
+ASTNode * parse_function_declaration(parser * parser) 
+{
+
+    char * name;
+    ASTNode * args;
+    ASTNode * body;
+    if(!match_value(parser, "function" && !match(parser, KEYWORD)))
+        return NULL;
+    if(!match(parser, IDENTIFIER))
+        return NULL;
+    
+    Token token = *get_current_token(parser);
+
+    name = strdup(token.value);
+    if(!match(parser, LPAR))
+        return NULL;
+    while(!match(parser, RPAR) && !match(parser, SEMI) && !match(parser, EOL))
+     {
+        ASTNode * arg = parse_variable_declaration(parser);
+        if(arg == NULL)
+            return NULL;
+        if(args == NULL)
+            args = arg;
+        else
+            appendNode(args, arg);
+        if(!match(parser, COMMA))
+            break;
+    }
+    if(!match(parser, LBRACE))
+        return NULL;
+    while(!match(parser, RBRACE))
+    {
+        ASTNode * statement = parse_statement(parser);
+        if(statement == NULL)
+            return NULL;
+        if(body == NULL)
+            body = statement;
+        else
+            appendNode(body, statement);
+    }
+    return createFunctionDeclarationNode(name, args, body);
+}
+
+// If applicable, this function will consume and create a new AST node that declares a new function call
+ASTNode * parse_function_call(parser * parser)
+{
+    Token token = *get_current_token(parser);
+
+    ASTNode * args;
+
+    if(!match(parser, KEYWORD))
+        return NULL;
+    char * id = strdup(token.value);
+    if(!match(parser, LPAR))
+        return NULL;
+
+    while(!match(parser, RPAR))
+    {
+        ASTNode * arg;
+        if(parse_literal(parser) != NULL)
+            arg = parse_literal(parser);
+        else if(parse_variable_call(parser) != NULL)
+            arg = parse_variable_call(parser);
+        else if(parse_function_call(parser) != NULL)
+            arg = parse_function_call(parser);
+        else
+            return NULL;
+
+
+        if(arg == NULL)
+            return NULL;
+        if(args == NULL)
+            args = arg;
+        else
+            appendNode(args, arg);
+        if(!match(parser, COMMA))
+            break;
+    }
+    return createFunctionCallNode(id, args);
+}
+
+ASTNode * parse_class_declaration(parser *parser)
+{
+    Token token = *get_current_token(parser);
+    if(!match(parser, KEYWORD) && !match_value(parser, "constructor"))
+        return NULL;
+    
+    if(!match(parser, IDENTIFIER))
+        return NULL;
+
+    Token token = *get_current_token(parser);
+    char * id = strdup(token.value);
+
+    ASTNode * body;
+    if(!match(parser, LBRACE))
+        return NULL;
+    while(!match(parser, RBRACE))
+    {
+        ASTNode * stmt = parse_statement(parser);
+        if(stmt == NULL)
+            return NULL;
+        if(body == NULL)
+            body = stmt;
+        else
+            appendNode(body, stmt);
+    }
+
+    return create_class_declaration_node(id, body);
+}
+
+ASTNode * parse_constructor_declaration(parser *parser)
+{
+    if(!match(parser, KEYWORD) && !match_value(parser, "constructor"))
+        return NULL;
+    if(!match(parser, LPAR))
+        return NULL;
+    ASTNode * args;
+    while(!match(parser, RPAR))
+    {
+        ASTNode * arg = parse_variable_declaration(parser);
+
+        if(arg == NULL)
+            return NULL;
+        if(args == NULL)
+            args = arg;
+        else
+            appendNode(args, arg);
+    }
+
+    ASTNode * body;
+    if(!match(parser, LBRACE))
+        return NULL;
+    while(!match(parser, RBRACE))
+    {
+        ASTNode * stmt = parse_statement(parser);
+        if(stmt == NULL)
+            return NULL;
+        if(body == NULL)
+            body = stmt;
+        else
+            appendNode(body, stmt);
+    }
+}

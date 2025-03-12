@@ -108,10 +108,13 @@ ASTNode* createUnaryOperatorNode(char *op) {
     return node;
 }
 
-ASTNode* createFunctionCallNode(char *id) {
+ASTNode* createFunctionCallNode(char *id, ASTNode *args) {
     ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = FUNCTION_CALL;
     node->data.identifier = strdup(id);
+    node->numChildren = 1;
+    node->children = (ASTNode**)malloc(sizeof(ASTNode*));
+    node->children[0] = args;
     return node;
 }
 
@@ -148,3 +151,42 @@ ASTNode* createVariableDeclarationNode(char *id, ASTNode *value) {
     return node;
 }
 
+ASTNode* create_function_declaration_node(char *id, ASTNode *args, ASTNode *body) {
+    ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));
+    node->type = FUNCTION_DECL;
+    node->data.identifier = strdup(id);
+    node->numChildren = 2;
+    node->children = (ASTNode**)malloc(sizeof(ASTNode*) * 2);
+    node->children[0] = args;
+    node->children[1] = body;
+    return node;
+}
+
+ASTNode * create_class_declaration_node(char *id, ASTNode *body) {
+    ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));
+    node->type = CLASS_DECL;
+    node->data.identifier = strdup(id);
+    node->numChildren = 1;
+    node->children = (ASTNode**)malloc(sizeof(ASTNode*));
+    node->children[0] = body;
+    return node;
+}
+
+ASTNode * create_constructor_declaration_node(char * id, ASTNode * args, ASTNode * body)
+{
+    ASTNode * node = (ASTNode*)malloc(sizeof(ASTNode));
+    node->type = CONSTRUCTOR_DECL;
+    node->data.identifier = strdup(id);
+    node->numChildren = 2;
+    node->children = (ASTNode**)malloc(sizeof(ASTNode*) * 2);
+    node->children[0] = args;
+    node->children[1] = body;
+    return node;
+}
+
+ASTNode* append_node(ASTNode *parent, ASTNode *child) {
+    parent->numChildren++;
+    parent->children = (ASTNode**)realloc(parent->children, sizeof(ASTNode*) * parent->numChildren);
+    parent->children[parent->numChildren - 1] = child;
+    return parent;
+}
