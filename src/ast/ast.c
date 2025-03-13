@@ -20,6 +20,7 @@ typedef enum {
 typedef enum {
     RETURN_STMT,
     IF_STMT,
+    ELSE_IF_STMT,
     ELSE_STMT,
     WHILE_STMT,
     FOR_STMT,
@@ -190,3 +191,37 @@ ASTNode* append_node(ASTNode *parent, ASTNode *child) {
     parent->children[parent->numChildren - 1] = child;
     return parent;
 }
+
+ASTNode * create_if_node(ASTNode * condition, ASTNode * body)
+{
+    ASTNode * node = malloc(sizeof(ASTNode));
+    node->type = IF_STMT;
+    node->numChildren = 2;
+    node->children = malloc(sizeof(ASTNode*) * 2);
+    node->children[0] = condition;
+    node->children[1] = body;
+    return node;
+}
+ASTNode * create_else_if_node(ASTNode * condition, ASTNode *body)
+{
+    ASTNode * node = malloc(sizeof(ASTNode));
+
+    node->type = ELSE_IF_STMT;
+    node->numChildren = 2;
+    node->children = malloc(sizeof(ASTNode*) * 2);
+    node->children[0] = condition;
+    node->children[1] = body;
+    return node;
+}
+
+ASTNode * create_else_node(ASTNode * body)
+{
+    ASTNode * node = malloc(sizeof(ASTNode));
+
+    node->type = ELSE_STMT;
+    node->numChildren = 1;
+    node->children = malloc(sizeof(ASTNode*));
+    node->children[0] = body;
+    return node;
+}
+

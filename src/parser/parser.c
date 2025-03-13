@@ -310,12 +310,59 @@ ASTNode * parse_statement(parser * parser)
 }
 
 
+ASTNode * parse_if(parser * parser)
+{
+    if(!match(parser, KEYWORD && !match_value(parser, "if")))
+        return NULL;
+    if(!match(parser, LPAR))
+        return NULL;
+    ASTNode * condition = parse_expression(parser);
+    if(condition == NULL)
+        return NULL;
+
+    ASTNode * body = parse_block(parser);
+    if(body == NULL)
+        return NULL;
+    
+    return create_if_node(condition, body);
+}
+
+ASTNode * parse_else_if(parser *parser)
+{
+    if(!match(parser, KEYWORD) && !match_value(parser, "else"))
+        return NULL;
+    if(!match(parser, KEYWORD) && !match_value(parser, "if"))
+        return NULL;
+    if(!match(parser, LPAR))
+        return NULL;
+
+    ASTNode * condition = parse_expression(parser);
+
+    if(condition == NULL)
+        return NULL;
+    
+    ASTNode * body = parse_block(parser);
+    if(body == NULL)
+        return NULL;
+
+    return create_else_if_node(condition, body);
+}
+
+ASTNode * parse_else(parser *parser)
+{
+    if(!match(parser, KEYWORD) && !match_value(parser, "else"))
+        return NULL;
+    ASTNode * body = parse_block(parser);
+    if(body == NULL)
+        return NULL;
+    return create_else_node(body);
+}
 
 ASTNode * parse_expression(parser * parser)
 {
     ASTNode * left = parse_term(parser);
     ASTNode * node = left;
-    
+
     while(!match(parser, RPAR) && !match(parser, SEMI) && !match(parser, EOL))
     {
         Token token = *get_current_token(parser);
