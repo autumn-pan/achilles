@@ -313,13 +313,39 @@ ASTNode * parse_statement(parser * parser)
 
 ASTNode * parse_expression(parser * parser)
 {
-    parse_term(parser);
+    ASTNode * left = parse_term(parser);
+    ASTNode * node = left;
+    
+    while(!match(parser, RPAR) && !match(parser, SEMI) && !match(parser, EOL))
+    {
+        Token token = *get_current_token(parser);
+        ASTNode * op = createOperatorNode(token.value);
+        ASTNode * right = parse_term(parser);
+        if(right == NULL)
+            return NULL;
+        ASTNode * newnode = createBinaryOperationNode(op, left, right);
+        node = newnode;
+    }
+
+    return node;
 }
 
 
 ASTNode * parse_term(parser * parser)
 {
-    parse_factor(parser);
+    ASTNode * node = parse_factor(parser);
+
+    while(match(parser, OPERATOR))
+    {
+        Token token = *get_current_token(parser);
+        ASTNode * op = createOperatorNode(token.value);
+        ASTNode * right = parse_factor(parser);
+        if(right == NULL)
+            return NULL;
+        ASTNode * newnode = createBinaryOperationNode(op, node, right);
+        node = newnode;
+    }
+    return node;
 }
 
 
