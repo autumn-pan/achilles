@@ -56,42 +56,42 @@ typedef struct ASTNode {
     } data;
 } ASTNode;
 
-ASTNode* createIntNode(int num) {
+ASTNode* create_int_node(int num) {
     ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = INT;
     node->data.intval = num;
     return node;
 }
 
-ASTNode* createFloatNode(int num) {
+ASTNode* create_float_node(int num) {
     ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = FLOAT;
     node->data.floatval = num;
     return node;
 }
 
-ASTNode* createCharNode(char c) {
+ASTNode* create_char_node(char c) {
     ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = CHAR;
     node->data.charval = c;
     return node;
 }
 
-ASTNode* createStringNode(int str) {
+ASTNode* create_string_node(int str) {
     ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = STRING;
     node->data.strval = strdup(str);
     return node;
 }
 
-ASTNode* createBoolNode(int boolean) {
+ASTNode* create_boolean_node(int boolean) {
     ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = BOOL;
     node->data.intval = boolean;
     return node;
 }
 
-ASTNode* createBinaryOperatorNode(char *op) {
+ASTNode* create_binary_operator_node(char *op) {
     ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = OPERATOR;
     node->data.operator = strdup(op);
@@ -109,7 +109,7 @@ ASTNode* createUnaryOperatorNode(char *op) {
     return node;
 }
 
-ASTNode* createFunctionCallNode(char *id, ASTNode *args) {
+ASTNode* create_function_call_node(char *id, ASTNode *args) {
     ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = FUNCTION_CALL;
     node->data.identifier = strdup(id);
@@ -119,7 +119,7 @@ ASTNode* createFunctionCallNode(char *id, ASTNode *args) {
     return node;
 }
 
-ASTNode* createConstructorCallNode(char *id) {
+ASTNode* create_constructor_call_node(char *id) {
     ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = CONSTRUCTOR_CALL;
     node->data.identifier = strdup(id);
@@ -173,11 +173,10 @@ ASTNode * create_class_declaration_node(char *id, ASTNode *body) {
     return node;
 }
 
-ASTNode * create_constructor_declaration_node(char * id, ASTNode * args, ASTNode * body)
+ASTNode * create_constructor_declaration_node(ASTNode * args, ASTNode * body)
 {
     ASTNode * node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = CONSTRUCTOR_DECL;
-    node->data.identifier = strdup(id);
     node->numChildren = 2;
     node->children = (ASTNode**)malloc(sizeof(ASTNode*) * 2);
     node->children[0] = args;
@@ -248,5 +247,19 @@ ASTNode * create_for_loop_node(ASTNode * init, ASTNode * condition, ASTNode * up
     node->children[1] = condition;
     node->children[2] = update;
     node->children[3] = body;
+    return node;
+}
+
+ASTNode * create_block_node(ASTNode ** statements, int numStatements)
+{
+    ASTNode * node = malloc(sizeof(ASTNode));
+
+    node->type = BLOCK_STMT;
+    node->numChildren = numStatements;
+    node->children = malloc(sizeof(ASTNode*) * numStatements);
+    for(int i = 0; i < numStatements; i++)
+    {
+        node->children[i] = statements[i];
+    }
     return node;
 }

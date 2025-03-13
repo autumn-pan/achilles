@@ -184,7 +184,7 @@ ASTNode * parse_function_declaration(parser * parser)
         else
             appendNode(body, statement);
     }
-    return createFunctionDeclarationNode(name, args, body);
+    return create_function_declaration_node(name, args, body);
 }
 
 // If applicable, this function will consume and create a new AST node that declares a new function call
@@ -222,7 +222,7 @@ ASTNode * parse_function_call(parser * parser)
         if(!match(parser, COMMA))
             break;
     }
-    return createFunctionCallNode(id, args);
+    return create_function_call_node(id, args);
 }
 
 ASTNode * parse_class_declaration(parser *parser)
@@ -266,28 +266,35 @@ ASTNode * parse_constructor_declaration(parser *parser)
     ASTNode * body = parse_block(parser);
     if(body == NULL)
         return NULL;
-    return createConstructorDeclarationNode(args, body);
+    return create_constructor_declaration_node(args, body);
 }
 
 ASTNode * parse_block(parser * parser)
 {
     ASTNode * body;
+    int numChildren = 0;
+
     if(!match(parser, LBRACE))
         return NULL;
     while(!match(parser, RBRACE))
     {
         ASTNode * stmt = parse_statement(parser);
+
+
         if(stmt == NULL)
             return NULL;
         if(body == NULL)
             body = stmt;
         else
-            appendNode(body, stmt);
+        {
+            append_node(body, stmt);
+            numChildren++;
+        }
     }
-    return createBlockNode(body);
+    return create_block_node(body, numChildren);
 }
 
-ASTNode * parse_statement(parser * parser)
+ASTNode * parse_statement(parser * parser) 
 {
     if(parse_variable_declaration(parser) != NULL)
         return parse_variable_declaration(parser);
@@ -367,6 +374,7 @@ ASTNode * parse_expression(parser * parser)
     {
         Token token = *get_current_token(parser);
         ASTNode * op = createOperatorNode(token.value);
+        
         ASTNode * right = parse_term(parser);
         if(right == NULL)
             return NULL;
