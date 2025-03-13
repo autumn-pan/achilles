@@ -225,3 +225,28 @@ ASTNode * create_else_node(ASTNode * body)
     return node;
 }
 
+ASTNode * create_while_loop_node(ASTNode * condition, ASTNode * body)
+{
+    ASTNode * node = malloc(sizeof(ASTNode));
+
+    node->type = WHILE_STMT;
+    node->numChildren = 2;
+    node->children = malloc(sizeof(ASTNode*) * 2);
+    node->children[0] = condition;
+    node->children[1] = body;
+    return node;
+}
+ASTNode * create_for_loop_node(ASTNode * init, ASTNode * condition, ASTNode * update, ASTNode * body)
+{
+    ASTNode * node = malloc(sizeof(ASTNode));
+
+    node->type = FOR_STMT;
+    node->numChildren = 4;
+    node->children = malloc(sizeof(ASTNode*) * 4);
+    
+    node->children[0] = init;
+    node->children[1] = condition;
+    node->children[2] = update;
+    node->children[3] = body;
+    return node;
+}

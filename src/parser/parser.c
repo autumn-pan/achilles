@@ -413,3 +413,44 @@ ASTNode * parse_factor(parser * parser)
         return NULL;
 
 }
+
+ASTNode * parse_while_loop(parser * parser)
+{
+    if(!match(parser, KEYWORD) && !match_value(parser, "while"))
+        return NULL;
+    if(!match(parser, LPAR))
+        return NULL;
+    ASTNode * condition = parse_expression(parser);
+    if(condition == NULL)
+        return NULL;
+    ASTNode * body = parse_block(parser);
+    if(body == NULL)
+        return NULL;
+    return createWhileNode(condition, body);
+}
+
+
+ASTNode * parse_for_loop(parser * parser)
+{
+    if (!match(parser, KEYWORD) && !match_value(parser, "for"))
+        return NULL;
+    if (!match(parser, LPAR))
+        return NULL;
+    ASTNode * init = parse_variable_declaration(parser);
+    if (init == NULL)
+        return NULL;
+    
+    ASTNode * condition = parse_expression(parser);
+    if (condition == NULL)
+        return NULL;
+    
+    ASTNode * update = parse_variable_declaration(parser);
+    if (update == NULL)
+        return NULL;
+    
+    ASTNode * body = parse_block(parser);
+    if (body == NULL)
+        return NULL;
+
+    return createForNode(init, condition, update, body);
+}

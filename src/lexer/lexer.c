@@ -22,6 +22,7 @@ Token initToken(enum TOKEN_TYPE type, char *value, int line, int column)
     token.value = strdup(value); // Set internal value
     token.line = line; // Line value for error handling
     token.column = column; // Col value for error handling
+    
     return token; // Returns the constructed token
 }
 
