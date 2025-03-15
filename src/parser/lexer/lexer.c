@@ -312,6 +312,9 @@ Token nextToken(Lexer *lexer)
     }
 }
 
+void free_lexer(Lexer *lexer) {
+    free(lexer);
+}
 
 //For testing purposes
 int main() {
