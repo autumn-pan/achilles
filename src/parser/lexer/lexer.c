@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "./tokens.c"
+#include "lexer.h"
 
 
 //This defines the structure of a token

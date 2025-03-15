@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "../lexer/lexer.c"
 #include "../lexer/tokens.c"
+#include "../ast/ast.h"
 
 // Define the types of AST nodes
 typedef enum {
