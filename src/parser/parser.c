@@ -70,16 +70,16 @@ ASTNode * parse_literal(parser *parser) {
 
 
     if(match(parser, INT_LITERAL)) {
-        createIntNode(token.value);
+        create_int_node(token.value);
     }
     else if(match(parser, STR_LITERAL)) {
-        createStringNode(token.value);
+        create_string_node(token.value);
     }
     else if(match(parser, CHAR_LITERAL)) {
-        createCharNode(token.value);
+        create_char_node(token.value);
     }
     else if(match(parser, BOOL_LITERAL)) {
-        createBoolNode(token.value);
+        create_boolean_node(token.value);
     }
 }
 
@@ -106,16 +106,16 @@ ASTNode * parse_variable_declaration(parser *parser) {
     }
     switch(token.type) {
         case INT_LITERAL:
-            createVariableDeclarationNode(token.value, NULL);
+            create_variable_declaration_node(token.value, NULL);
             break;
         case STR_LITERAL:
-            createVariableDeclarationNode(token.value, NULL);
+            create_variable_declaration_node(token.value, NULL);
             break;
         case CHAR_LITERAL:
-            createVariableDeclarationNode(token.value, NULL);
+            create_variable_declaration_node(token.value, NULL);
             break;
         case BOOL_LITERAL:
-            createVariableDeclarationNode(token.value, NULL);
+            create_variable_declaration_node(token.value, NULL);
             break;
         default:
             break;
@@ -123,22 +123,22 @@ ASTNode * parse_variable_declaration(parser *parser) {
     ASTNode *node;
     switch(token.type) {
         case INT_LITERAL:
-            node = createIntNode(token.value);
+            node = create_int_node(token.value);
             break;
         case STR_LITERAL:
-            node = createStringNode(token.value);
+            node = create_string_node(token.value);
             break;
         case CHAR_LITERAL:
-            node = createCharNode(token.value);
+            node = create_char_node(token.value);
             break;
         case BOOL_LITERAL:
-            node = createBoolNode(token.value);
+            node = create_bool_node(token.value);
             break;
         default:
             null = true;
             break;
     }
-    createVariableDeclarationNode(token.value, node);
+    create_variable_declaration_node(token.value, node);
 }
 
 ASTNode * parse_variable_call(parser * parser) 
@@ -146,7 +146,7 @@ ASTNode * parse_variable_call(parser * parser)
     Token token = *get_current_token(parser);
     if(!match(parser, IDENTIFIER))
         return NULL;
-    return createVariableCallNode(token.value);
+    return create_variable_call_node(token.value);
 }
 
 // If applicable, this function will consume and create a new AST node that declares a new function
@@ -174,7 +174,7 @@ ASTNode * parse_function_declaration(parser * parser)
         if(args == NULL)
             args = arg;
         else
-            appendNode(args, arg);
+            append_node(args, arg);
         if(!match(parser, COMMA))
             break;
     }
@@ -224,7 +224,7 @@ ASTNode * parse_function_call(parser * parser)
         if(args == NULL)
             args = arg;
         else
-            appendNode(args, arg);
+            append_node(args, arg);
         if(!match(parser, COMMA))
             break;
     }

@@ -128,7 +128,7 @@ ASTNode* create_binary_operator_node(NodeType op, ASTNode *left, ASTNode *right)
 }
 
 
-ASTNode* createUnaryOperatorNode(char *op) {
+ASTNode* create_unary_operator_node(char *op) {
     ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = OPERATOR;
     node->data.operator = strdup(op);
@@ -154,7 +154,7 @@ ASTNode* create_constructor_call_node(char *id) {
     return node;
 }
 
-ASTNode* createVariableDeclarationNode(char *id, ASTNode *value) {
+ASTNode* create_variable_declaration_node(char *id, ASTNode *value) {
     ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = VARIABLE_DECL;
     node->data.identifier = strdup(id);
@@ -177,6 +177,13 @@ ASTNode* createVariableDeclarationNode(char *id, ASTNode *value) {
             node->children[0] = createBoolNode(value->data.intval);
             break;
     }
+    return node;
+}
+ASTNode * create_variable_call_node(ASTNode * id)
+{
+    ASTNode * node = (ASTNode*)malloc(sizeof(ASTNode));
+    node->type = VARIABLE_CALL;
+    node->data.identifier = strdup(id->data.identifier);
     return node;
 }
 
