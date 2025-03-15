@@ -13,7 +13,32 @@ typedef enum {
     STRING,
     BOOL,
     CHAR,
-    OPERATOR
+    ADD,
+    SUB,
+    MULT,
+    DIV,
+    MOD,
+
+    ASSIGN,
+
+    NOT,
+    AND,
+    OR,
+
+    LESS,
+    GREATER,
+    LESS_EQUAL,
+    GREATER_EQUAL,
+    EQUAL,
+
+    BIT_AND,
+    BIT_OR,
+    BIT_XOR,
+    BIT_NOT,
+    LEFT_SHIFT,
+    RIGHT_SHIFT,
+
+    INSTANCEOF
 } NodeType;
 
 // Define the types of statements
@@ -91,14 +116,17 @@ ASTNode* create_boolean_node(int boolean) {
     return node;
 }
 
-ASTNode* create_binary_operator_node(char *op) {
+ASTNode* create_binary_operator_node(NodeType op, ASTNode *left, ASTNode *right) {
     ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));
-    node->type = OPERATOR;
-    node->data.operator = strdup(op);
+    node->type = op;
     node->numChildren = 2;
     node->children = (ASTNode**)malloc(sizeof(ASTNode*) * 2);
+
+    node->children[0] = left;
+    node->children[1] = right;
     return node;
 }
+
 
 ASTNode* createUnaryOperatorNode(char *op) {
     ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));

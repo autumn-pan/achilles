@@ -29,6 +29,7 @@ void free_parser(parser *p) {
 Token *get_current_token(parser *p) {
     return &p->tokenstream[p->pos];
 }
+
 // Function to get the next token
 Token *get_next_token(parser *p) {
     if (p->pos < p->len - 1) {
@@ -38,7 +39,10 @@ Token *get_next_token(parser *p) {
     }
     return NULL;
 }
+
+
 // Match function
+// Returns true if the current token matches the given type, also advances the parser by one token
 bool match(parser *p, enum TOKEN_TYPE type) {
     if (p->pos < p->len && p->tokenstream[p->pos].type == type) {
         p->pos++;
@@ -63,6 +67,8 @@ bool match_value(parser *p, char *value) {
 // If applicable, this function will create a literal node
 ASTNode * parse_literal(parser *parser) {
     Token token = *get_current_token(parser);
+
+
     if(match(parser, INT_LITERAL)) {
         createIntNode(token.value);
     }
@@ -364,7 +370,7 @@ ASTNode * parse_else(parser *parser)
         return NULL;
     return create_else_node(body);
 }
-
+// Parses the expression
 ASTNode * parse_expression(parser * parser)
 {
     ASTNode * left = parse_term(parser);
@@ -373,19 +379,18 @@ ASTNode * parse_expression(parser * parser)
     while(!match(parser, RPAR) && !match(parser, SEMI) && !match(parser, EOL))
     {
         Token token = *get_current_token(parser);
-        ASTNode * op = createOperatorNode(token.value);
         
         ASTNode * right = parse_term(parser);
         if(right == NULL)
             return NULL;
-        ASTNode * newnode = createBinaryOperationNode(op, left, right);
+        ASTNode * newnode = create_binary_operator_node(token.value, left, right);
         node = newnode;
     }
 
     return node;
 }
 
-
+// Parses each term in the expression
 ASTNode * parse_term(parser * parser)
 {
     ASTNode * node = parse_factor(parser);
@@ -393,11 +398,11 @@ ASTNode * parse_term(parser * parser)
     while(match(parser, OPERATOR))
     {
         Token token = *get_current_token(parser);
-        ASTNode * op = createOperatorNode(token.value);
         ASTNode * right = parse_factor(parser);
         if(right == NULL)
             return NULL;
-        ASTNode * newnode = createBinaryOperationNode(op, node, right);
+            
+        ASTNode * newnode = create_binary_operator_node(token.value, node, right);
         node = newnode;
     }
     return node;
@@ -434,7 +439,7 @@ ASTNode * parse_while_loop(parser * parser)
     ASTNode * body = parse_block(parser);
     if(body == NULL)
         return NULL;
-    return createWhileNode(condition, body);
+    return create_while_loop_node(condition, body);
 }
 
 
@@ -460,5 +465,16 @@ ASTNode * parse_for_loop(parser * parser)
     if (body == NULL)
         return NULL;
 
-    return createForNode(init, condition, update, body);
+    return create_for_loop_node(init, condition, update, body);
 }
+
+ASTNode * parse_return(parser * parser)
+{
+    if(!match(parser, KEYWORD) && !match_value(parser, "return"))
+        return NULL;
+    ASTNode * value = parse_expression(parser);
+    if(value == NULL)
+        return NULL;
+    return create_return_node(value);
+}
+
