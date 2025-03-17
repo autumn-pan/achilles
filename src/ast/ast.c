@@ -20,6 +20,8 @@ typedef enum {
     MOD,
 
     ASSIGN,
+    PLUS_EQUAL,
+    MINUS_EQUAL,
 
     NOT,
     AND,
@@ -38,7 +40,9 @@ typedef enum {
     LEFT_SHIFT,
     RIGHT_SHIFT,
 
-    INSTANCEOF
+    INSTANCEOF,
+
+    CONCATENATE
 } NodeType;
 
 // Define the types of statements
