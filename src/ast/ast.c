@@ -299,3 +299,18 @@ ASTNode * create_block_node(ASTNode ** statements, int numStatements)
     }
     return node;
 }
+
+char * get_variable_type(ASTNode * node)
+{
+    ASTNode * type = node->children[0]->type;
+    
+    switch(type)
+    {
+        case INT: return "int";
+        case FLOAT: return "float";
+        case STRING: return "string";
+        case BOOL: return "bool";
+        case CHAR: return "char";
+        default: return NULL;
+    }
+}
