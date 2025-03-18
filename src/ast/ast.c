@@ -163,6 +163,7 @@ ASTNode* create_variable_declaration_node(char *id, ASTNode *value) {
     node->type = VARIABLE_DECL;
     node->data.identifier = strdup(id);
     node->numChildren = 1;
+    node->value = value;
     node->children = (ASTNode**)malloc(sizeof(ASTNode*) * 1);
     switch(value->type) {
         case INT_LITERAL:
@@ -301,4 +302,17 @@ ASTNode * create_block_node(ASTNode ** statements, int numStatements)
         node->children[i] = statements[i];
     }
     return node;
+}
+
+char * type_to_string(NodeType type)
+{
+    switch(type)
+    {
+        case INT: return "int";
+        case CHAR: return "char";
+        case STRING: return "string";
+        case BOOL: return "bool";
+        case FLOAT: return "float";
+        default: return NULL;
+    }
 }
