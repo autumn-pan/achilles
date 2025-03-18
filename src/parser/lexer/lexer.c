@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "./tokens.c"
+#include "lexer.h"
 
 
 //This defines the structure of a token
@@ -311,6 +312,9 @@ Token nextToken(Lexer *lexer)
     }
 }
 
+void free_lexer(Lexer *lexer) {
+    free(lexer);
+}
 
 //For testing purposes
 int main() {

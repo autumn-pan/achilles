@@ -1,3 +1,8 @@
+#include "error_handling.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 typedef enum ERROR_TYPE {
     SYNTAX_ERROR,
     TYPE_ERROR

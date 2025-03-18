@@ -33,6 +33,44 @@ Token *get_current_token(parser *p) {
     return &p->tokenstream[p->pos];
 }
 
+bool is_end_of_line(Token *token) {
+    return token->type == EOL || token->type == END_OF_FILE || token->type == SEMI;
+}
+Token * advance_parser(parser *p) {
+    return &p->tokenstream[p->pos++];
+}
+const char * END_OF_TERM_OPS[] = {
+    ";",
+    ",",
+    ".",
+    "}",
+    "]",
+    ")",
+    "+",
+    "-",
+    "==",
+    "<",
+    ">",
+    "<=",
+    ">=",
+    "+=",
+    "-=",
+    "*=",
+    "/=",
+    "="
+};
+
+bool is_end_of_term(Token *token) {
+    if(is_end_of_line(token))
+        return true;
+    for(int i = 0; i < sizeof(END_OF_TERM_OPS) / sizeof(END_OF_TERM_OPS[0]); i++)
+    {
+        if(strcmp(token->value, END_OF_TERM_OPS[i]) == 0)
+            return true;
+    }
+    return false;
+}
+
 // Function to get the next token
 Token *get_next_token(parser *p) {
     if (p->pos < p->len - 1) {
@@ -321,22 +359,23 @@ ASTNode * parse_block(parser * parser)
 
 ASTNode * parse_statement(parser * parser) 
 {
-    if(parse_variable_declaration(parser) != NULL)
-        return parse_variable_declaration(parser);
-    else if(parse_function_declaration(parser) != NULL)
-        return parse_function_declaration(parser);
-    else if(parse_function_call(parser) != NULL)
-        return parse_function_call(parser);
-    else if(parse_class_declaration(parser) != NULL)
-        return parse_class_declaration(parser);
-    else if(parse_constructor_declaration(parser) != NULL)
-        return parse_constructor_declaration(parser);
-    else if(parse_block(parser) != NULL)
-        return parse_block(parser);
-    else if(parse_literal(parser) != NULL)
-        return parse_literal(parser);
-    else if(parse_variable_call(parser) != NULL)
-        return parse_variable_call(parser);
+    ASTNode *node = NULL;
+    if((node = parse_variable_declaration(parser)) != NULL)
+        return node;
+    else if((node = parse_function_declaration(parser)) != NULL)
+        return node;
+    else if((node = parse_function_call(parser)) != NULL)
+        return node;
+    else if((node = parse_class_declaration(parser)) != NULL)
+        return node;
+    else if((node = parse_constructor_declaration(parser)) != NULL)
+        return node;
+    else if((node = parse_block(parser)) != NULL)
+        return node;
+    else if((node = parse_literal(parser)) != NULL)
+        return node;
+    else if((node = parse_variable_call(parser)) != NULL)
+        return node;
     else
         return NULL;
 }
@@ -395,7 +434,7 @@ ASTNode * parse_expression(parser * parser)
     ASTNode * left = parse_term(parser);
     ASTNode * node = left;
 
-    while(!match(parser, RPAR) && !match(parser, SEMI) && !match(parser, EOL))
+    while(!match(parser, RPAR) && !match(parser, SEMI) && !match(parser, EOL) && !match(parser, EOF))
     {
         Token token = *get_current_token(parser);
         
@@ -414,7 +453,7 @@ ASTNode * parse_term(parser * parser)
 {
     ASTNode * node = parse_factor(parser);
 
-    while(match(parser, OPERATOR))
+    while(!is_end_of_term(advance_parser(parser)))
     {
         Token token = *get_current_token(parser);
         ASTNode * right = parse_factor(parser);
@@ -441,6 +480,7 @@ ASTNode * parse_factor(parser * parser)
         return parse_variable_call(parser);
     else if(parse_function_call(parser) != NULL)
         return parse_function_call(parser);
+
     parser_error(parser, "Expected a factor", parser->errorList);
     return NULL;
 
@@ -497,3 +537,22 @@ ASTNode * parse_return(parser * parser)
     return create_return_node(value);
 }
 
+ASTNode * parse(parser * parser)
+{
+    ASTNode * root = NULL;
+    while(parser->pos < parser->len)
+    {
+        ASTNode * stmt = parse_statement(parser);
+        if(stmt == NULL)
+            return NULL;
+        if(root == NULL)
+            root = stmt;
+        else
+            append_node(root, stmt);
+    }
+    return root;
+
+    free_parser(parser);
+    free_error_list(parser->errorList);
+    return NULL;
+}
