@@ -107,8 +107,11 @@ const char* getTokenType(enum TOKEN_TYPE type) {
         case STR_LITERAL: return "STR_LITERAL";
         case KEYWORD: return "KEYWORD";
         case IDENTIFIER: return "IDENTIFIER";
-        case FLOAT_LITERAL: return "FLOAT_LITERAL";
-        case INT_LITERAL: return "INT_LITERAL";
+        case FLOAT_LITERAL: return "float";
+        case INT_LITERAL: return "int";
+        case STR_LITERAL: return "string";
+        case BOOL_LITERAL: return "bool";
+        case CHAR_LITERAL: return "char";
         case OPERATOR: return "OPERATOR";
         case LBRACE: return "LBRACE";
         case RBRACE: return "RBRACE";

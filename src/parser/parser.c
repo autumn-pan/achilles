@@ -171,6 +171,12 @@ ASTNode * parse_function_declaration(parser * parser)
     ASTNode * body;
     if(!match_value(parser, "function") || !match(parser, KEYWORD))
         parser_error(parser, "Expected 'function' keyword", parser->errorList);
+
+    if(!match(parser, KEYWORD))
+        parser_error(parser, "Expected return type", parser->errorList);
+
+    char * datatype = getTokenType(get_current_token->type);
+
     if(!match(parser, IDENTIFIER))
         parser_error(parser, "Expected function name", parser->errorList);
     
@@ -203,7 +209,7 @@ ASTNode * parse_function_declaration(parser * parser)
         else
             appendNode(body, statement);
     }
-    return create_function_declaration_node(name, args, body);
+    return create_function_declaration_node(name,datatype, args, body);
 }
 
 // If applicable, this function will consume and create a new AST node that declares a new function call

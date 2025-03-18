@@ -75,15 +75,33 @@ typedef struct ASTNode {
     NodeType type;
     struct ASTNode **children;
     int numChildren;
+
     union {
         int intval;
         float floatval;
         char *strval;
         char charval;
-        char *identifier;
+        typedef struct {
+            char * identifier;
+            char * datatype;
+        } IdentifierData;
         char *operator;
     } data;
 } ASTNode;
+
+
+IdentifierData init_identifier(char *id, char*type)
+{
+    IdentifierData data = (IdentifierData)malloc(sizeof(ASTNode));
+    data.identifier = strdup(id);
+    data.datatype = strdup(type);
+}
+
+void free_identifier(IdentifierData id)
+{
+    free(id.identifier);
+    free(id.datatype);
+}
 
 ASTNode* create_int_node(int num) {
     ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));
@@ -154,14 +172,14 @@ ASTNode* create_function_call_node(char *id, ASTNode *args) {
 ASTNode* create_constructor_call_node(char *id) {
     ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = CONSTRUCTOR_CALL;
-    node->data.identifier = strdup(id);
+    node->data.IdentifierData.identifier = init_identifier(strdup(id), NULL);
     return node;
 }
 
 ASTNode* create_variable_declaration_node(char *id, ASTNode *value) {
     ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = VARIABLE_DECL;
-    node->data.identifier = strdup(id);
+    node->data.IdentifierData.identifier = init_identifier(strdup(id), type_to_string(value->type));
     node->numChildren = 1;
     node->value = value;
     node->children = (ASTNode**)malloc(sizeof(ASTNode*) * 1);
@@ -188,14 +206,14 @@ ASTNode * create_variable_call_node(ASTNode * id)
 {
     ASTNode * node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = VARIABLE_CALL;
-    node->data.identifier = strdup(id->data.identifier);
+    node->data.IdentifierData.identifier = init_identifier(strdup(id.data.IdentifierData.identifier), NULL)
     return node;
 }
 
-ASTNode* create_function_declaration_node(char *id, ASTNode *args, ASTNode *body) {
+ASTNode* create_function_declaration_node(char *id, char *datatype, ASTNode *args, ASTNode *body) {
     ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = FUNCTION_DECL;
-    node->data.identifier = strdup(id);
+    node->data.IdentifierData.identifier = init_identifier(strdup(id), NULL)
     node->numChildren = 2;
     node->children = (ASTNode**)malloc(sizeof(ASTNode*) * 2);
     node->children[0] = args;
@@ -206,7 +224,7 @@ ASTNode* create_function_declaration_node(char *id, ASTNode *args, ASTNode *body
 ASTNode * create_class_declaration_node(char *id, ASTNode *body) {
     ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = CLASS_DECL;
-    node->data.identifier = strdup(id);
+    node->data.IdentifierData.identifier = init_identifier(strdup(id), NULL)
     node->numChildren = 1;
     node->children = (ASTNode**)malloc(sizeof(ASTNode*));
     node->children[0] = body;
@@ -313,6 +331,8 @@ char * type_to_string(NodeType type)
         case STRING: return "string";
         case BOOL: return "bool";
         case FLOAT: return "float";
+        case VARIABLE_DECL: return "variable decl";
+        case FUNCTION_DECL: return "function decl";
         default: return NULL;
     }
 }
