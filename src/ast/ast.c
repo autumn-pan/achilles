@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include "../lexer/lexer.c"
 #include "../lexer/tokens.c"
-#include "../ast/ast.h"
 
 // Define the types of AST nodes
 typedef enum {
@@ -323,7 +322,6 @@ ASTNode * create_block_node(ASTNode ** statements, int numStatements)
     return node;
 }
 
-<<<<<<< HEAD
 char * type_to_string(NodeType type)
 {
     switch(type)
@@ -335,19 +333,6 @@ char * type_to_string(NodeType type)
         case FLOAT: return "float";
         case VARIABLE_DECL: return "variable decl";
         case FUNCTION_DECL: return "function decl";
-=======
-char * get_variable_type(ASTNode * node)
-{
-    ASTNode * type = node->children[0]->type;
-    
-    switch(type)
-    {
-        case INT: return "int";
-        case FLOAT: return "float";
-        case STRING: return "string";
-        case BOOL: return "bool";
-        case CHAR: return "char";
->>>>>>> 7213f265cd0b42fcbd3c8efa5c10e30771d37af1
         default: return NULL;
     }
 }
