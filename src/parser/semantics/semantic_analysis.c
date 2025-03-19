@@ -53,4 +53,11 @@ bool validate_binary_operation(ASTNode * node)
 
 }
 
+bool validate_variable_call(ASTNode * node)
+{
+    NodeType type = node->type;
+
+    if
+}
+
 
