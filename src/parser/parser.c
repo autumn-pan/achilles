@@ -2,19 +2,30 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include "./lexer/lexer.h"
-#include "./lexer/tokens.c"
-#include "../ast/ast.h"
-#include "../error_handling.c"
+#include "src/parser/lexer/lexer.h"
+#include "src/parser/lexer/tokens.c"
+#include "src/ast/ast.h"
+#include "src/error_handling.h"
 
-typedef struct {
+typedef struct parser {
     int pos;
     int len;
     Token *tokenstream;
-    ErrorList *errorList;
+    struct ErrorList *errorList;
 } parser;
 
 // Function to initialize a parser
+parser *init_parser(Token *tokenstream) {
+    parser *p = malloc(sizeof(parser));
+    p->pos = 0;
+    p->len = 0;
+    while (tokenstream[p->len].type != END_OF_FILE) {
+        p->len++;
+    }
+    p->tokenstream = tokenstream;
+    p->errorList = create_error_list();
+    return p;
+}
 parser *init_parser(Token *tokenstream) {
     parser *p = malloc(sizeof(parser));
     p->pos = 0;
@@ -82,8 +93,8 @@ Token *get_next_token(parser *p) {
     return NULL;
 }
 
-void parser_error(parser *p, const char *message, ErrorList *list) {
-    Error *error = create_error(p->tokenstream[p->pos].line, p->tokenstream[p->pos].column, message);
+void parser_error(struct parser *p, const char *message, struct ErrorList *list) {
+    struct Error *error = create_error(p->tokenstream[p->pos].line, p->tokenstream[p->pos].column, message);
     add_error(list, error);
     fprintf(stderr, "Parser error at line %d, column %d: %s\n", p->tokenstream[p->pos].line, p->tokenstream[p->pos].column, message);
      // Free the parser and exit
@@ -114,7 +125,7 @@ bool match_value(parser *p, char *value) {
 }
 
 // If applicable, this function will create a literal node
-ASTNode * parse_literal(parser *parser) {
+struct ASTNode * parse_literal(parser *parser) {
     Token token = *get_current_token(parser);
 
     if(match(parser, INT_LITERAL)) {
@@ -134,7 +145,7 @@ ASTNode * parse_literal(parser *parser) {
 }
 
 // If applicable, this function will consume and create a new AST node that declares a new variable
-ASTNode * parse_variable_declaration(parser *parser) {
+struct ASTNode * parse_variable_declaration(parser *parser) {
     Token token = *get_current_token(parser);
 
     bool null = false;
@@ -154,7 +165,7 @@ ASTNode * parse_variable_declaration(parser *parser) {
         if(!match(parser, SEMI))
             parser_error(parser, "Expected ';'", parser->errorList);
     }
-    ASTNode *node = NULL;
+    struct ASTNode *node = NULL;
     switch(token.type) {
         case INT_LITERAL:
             node = create_int_node(token.value);
@@ -174,7 +185,7 @@ ASTNode * parse_variable_declaration(parser *parser) {
     return create_variable_declaration_node(token.value, node);
 }
 
-ASTNode * parse_variable_call(parser * parser) 
+struct ASTNode * parse_variable_call(parser * parser) 
 {
     Token token = *get_current_token(parser);
     if(!match(parser, IDENTIFIER))
@@ -183,12 +194,12 @@ ASTNode * parse_variable_call(parser * parser)
 }
 
 // If applicable, this function will consume and create a new AST node that declares a new function
-ASTNode * parse_function_declaration(parser * parser) 
+struct ASTNode * parse_function_declaration(parser * parser) 
 {
 
     char * name;
-    ASTNode * args = NULL;
-    ASTNode * body = NULL;
+    struct ASTNode * args = NULL;
+    struct ASTNode * body = NULL;
     if(!match_value(parser, "function") || !match(parser, KEYWORD))
         parser_error(parser, "Expected 'function' keyword", parser->errorList);
     if(!match(parser, IDENTIFIER))
@@ -201,7 +212,7 @@ ASTNode * parse_function_declaration(parser * parser)
         return NULL;
     while(!match(parser, RPAR) && !match(parser, SEMI) && !match(parser, EOL))
      {
-        ASTNode * arg = parse_variable_declaration(parser);
+        struct ASTNode * arg = parse_variable_declaration(parser);
         if(arg == NULL)
             return NULL;
         if(args == NULL)
@@ -215,7 +226,7 @@ ASTNode * parse_function_declaration(parser * parser)
         return NULL;
     while(!match(parser, RBRACE))
     {
-        ASTNode * statement = parse_statement(parser);
+        struct ASTNode * statement = parse_statement(parser);
         if(statement == NULL)
             return NULL;
         if(body == NULL)
@@ -227,10 +238,10 @@ ASTNode * parse_function_declaration(parser * parser)
 }
 
 // If applicable, this function will consume and create a new AST node that declares a new function call
-ASTNode * parse_function_call(parser * parser)
+struct ASTNode * parse_function_call(parser * parser)
 {
     Token token = *get_current_token(parser);
-    ASTNode * args = NULL;
+    struct ASTNode * args = NULL;
 
     if(!match(parser, KEYWORD))
         parser_error(parser, "Expected function call keyword", parser->errorList);
@@ -240,7 +251,7 @@ ASTNode * parse_function_call(parser * parser)
 
     while(!match(parser, RPAR))
     {
-        ASTNode * arg;
+        struct ASTNode * arg;
         if(parse_literal(parser) != NULL)
             arg = parse_literal(parser);
         else if(parse_variable_call(parser) != NULL)
@@ -263,7 +274,7 @@ ASTNode * parse_function_call(parser * parser)
     return create_function_call_node(id, args);
 }
 
-ASTNode * parse_class_declaration(parser *parser)
+struct ASTNode * parse_class_declaration(parser *parser)
 {
     Token token = *get_current_token(parser);
     if(!match(parser, KEYWORD) || !match_value(parser, "class"))
@@ -275,23 +286,23 @@ ASTNode * parse_class_declaration(parser *parser)
     token = *get_current_token(parser);
     char * id = strdup(token.value);
 
-    ASTNode * body = parse_block(parser);
+    struct ASTNode * body = parse_block(parser);
     if(body == NULL)
         return NULL;
 
     return create_class_declaration_node(id, body);
 }
 
-ASTNode * parse_constructor_declaration(parser *parser)
+struct ASTNode * parse_constructor_declaration(parser *parser)
 {
-    ASTNode * args = NULL;
+    struct ASTNode * args = NULL;
     if(!match(parser, KEYWORD) || !match_value(parser, "constructor"))
         parser_error(parser, "Expected 'constructor' keyword", parser->errorList);
     if(!match(parser, LPAR))
         parser_error(parser, "Expected '('", parser->errorList);
     while(!match(parser, RPAR))
     {
-        ASTNode * arg = parse_variable_declaration(parser);
+        struct ASTNode * arg = parse_variable_declaration(parser);
 
         if(arg == NULL)
             return NULL;
@@ -301,22 +312,22 @@ ASTNode * parse_constructor_declaration(parser *parser)
             appendNode(args, arg);
     }
 
-    ASTNode * body = parse_block(parser);
+    struct ASTNode * body = parse_block(parser);
     if(body == NULL)
         return NULL;
     return create_constructor_declaration_node(args, body);
 }
 
-ASTNode * parse_block(parser * parser)
+struct ASTNode * parse_block(parser * parser)
 {
-    ASTNode * body = NULL;
+    struct ASTNode * body = NULL;
     int numChildren = 0;
 
     if(!match(parser, LBRACE))
         parser_error(parser, "Expected '{'", parser->errorList);
     while(!match(parser, RBRACE))
     {
-        ASTNode * stmt = parse_statement(parser);
+        struct ASTNode * stmt = parse_statement(parser);
 
 
         if(stmt == NULL)
@@ -332,9 +343,9 @@ ASTNode * parse_block(parser * parser)
     return create_block_node(body, numChildren);
 }
 
-ASTNode * parse_statement(parser * parser) 
+struct ASTNode * parse_statement(parser * parser) 
 {
-    ASTNode *node = NULL;
+    struct ASTNode *node = NULL;
     if((node = parse_variable_declaration(parser)) != NULL)
         return node;
     else if((node = parse_function_declaration(parser)) != NULL)
@@ -356,24 +367,24 @@ ASTNode * parse_statement(parser * parser)
 }
 
 
-ASTNode * parse_if(parser * parser)
+struct ASTNode * parse_if(parser * parser)
 {
     if(!match(parser, KEYWORD) || !match_value(parser, "if"))
         parser_error(parser, "Expected 'if' keyword", parser->errorList);
     if(!match(parser, LPAR))
         parser_error(parser, "Expected '('", parser->errorList);
-    ASTNode * condition = parse_expression(parser);
+    struct ASTNode * condition = parse_expression(parser);
     if(condition == NULL)
         return NULL;
 
-    ASTNode * body = parse_block(parser);
+    struct ASTNode * body = parse_block(parser);
     if(body == NULL)
         return NULL;
     
     return create_if_node(condition, body);
 }
 
-ASTNode * parse_else_if(parser *parser)
+struct ASTNode * parse_else_if(parser *parser)
 {
     if(!match(parser, KEYWORD) || !match_value(parser, "else"))
         parser_error(parser, "Expected 'else' keyword", parser->errorList);
@@ -382,30 +393,30 @@ ASTNode * parse_else_if(parser *parser)
     if(!match(parser, LPAR))
         parser_error(parser, "Expected '('", parser->errorList);
 
-    ASTNode * condition = parse_expression(parser);
+    struct ASTNode * condition = parse_expression(parser);
 
     if(condition == NULL)
         return NULL;
     
-    ASTNode * body = parse_block(parser);
+    struct ASTNode * body = parse_block(parser);
     if(body == NULL)
         return NULL;
 
     return create_else_if_node(condition, body);
 }
 
-ASTNode * parse_else(parser *parser)
+struct ASTNode * parse_else(parser *parser)
 {
     if(!match(parser, KEYWORD) || !match_value(parser, "else"))
         parser_error(parser, "Expected 'else' keyword", parser->errorList);
-    ASTNode * body = parse_block(parser);
+    struct ASTNode * body = parse_block(parser);
     if(body == NULL)
         return NULL;
     return create_else_node(body);
 }
 // Parses the expression
-ASTNode * parse_expression(parser * parser) {
-    ASTNode * left = parse_term(parser);
+struct ASTNode * parse_expression(parser * parser) {
+    struct ASTNode * left = parse_term(parser);
     if (left == NULL) return NULL;
 
     while (!is_end_of_term(get_current_token(parser))) {
@@ -413,7 +424,7 @@ ASTNode * parse_expression(parser * parser) {
         if (token.type != OPERATOR) break;
 
         advance_parser(parser);
-        ASTNode * right = parse_term(parser);
+        struct ASTNode * right = parse_term(parser);
         if (right == NULL) return NULL;
 
         left = create_binary_operator_node(token.value, left, right);
@@ -423,8 +434,8 @@ ASTNode * parse_expression(parser * parser) {
 }
 
 // Parses each term in the expression
-ASTNode * parse_term(parser * parser) {
-    ASTNode * node = parse_factor(parser);
+struct ASTNode * parse_term(parser * parser) {
+    struct ASTNode * node = parse_factor(parser);
     if (node == NULL) return NULL;
 
     while (!is_end_of_term(get_current_token(parser))) {
@@ -432,7 +443,7 @@ ASTNode * parse_term(parser * parser) {
         if (token.type != OPERATOR) break;
 
         advance_parser(parser);
-        ASTNode * right = parse_factor(parser);
+        struct ASTNode * right = parse_factor(parser);
         if (right == NULL) return NULL;
 
         node = create_binary_operator_node(token.value, node, right);
@@ -442,9 +453,9 @@ ASTNode * parse_term(parser * parser) {
 }
 
 
-ASTNode * parse_factor(parser * parser) {
+struct ASTNode * parse_factor(parser * parser) {
     if (match(parser, LPAR)) {
-        ASTNode * expr = parse_expression(parser);
+        struct ASTNode * expr = parse_expression(parser);
         if (!match(parser, RPAR)) {
             parser_error(parser, "Expected ')'", parser->errorList);
             return NULL;
@@ -452,7 +463,7 @@ ASTNode * parse_factor(parser * parser) {
         return expr;
     }
 
-    ASTNode * node = NULL;
+    struct ASTNode * node = NULL;
     if ((node = parse_literal(parser)) != NULL) return node;
     if ((node = parse_variable_call(parser)) != NULL) return node;
     if ((node = parse_function_call(parser)) != NULL) return node;
@@ -461,62 +472,62 @@ ASTNode * parse_factor(parser * parser) {
     return NULL;
 }
 
-ASTNode * parse_while_loop(parser * parser)
+struct ASTNode * parse_while_loop(parser * parser)
 {
     if(!match(parser, KEYWORD) || !match_value(parser, "while"))
         parser_error(parser, "Expected 'while' keyword", parser->errorList);
     if(!match(parser, LPAR))
         parser_error(parser, "Expected '('", parser->errorList);
-    ASTNode * condition = parse_expression(parser);
+    struct ASTNode * condition = parse_expression(parser);
     if(condition == NULL)
         return NULL;
-    ASTNode * body = parse_block(parser);
+    struct ASTNode * body = parse_block(parser);
     if(body == NULL)
         return NULL;
     return create_while_loop_node(condition, body);
 }
 
 
-ASTNode * parse_for_loop(parser * parser)
+struct ASTNode * parse_for_loop(parser * parser)
 {
     if (!match(parser, KEYWORD) || !match_value(parser, "for"))
         parser_error(parser, "Expected 'for' keyword", parser->errorList);
     if (!match(parser, LPAR))
         parser_error(parser, "Expected '('", parser->errorList);
-    ASTNode * init = parse_variable_declaration(parser);
+    struct ASTNode * init = parse_variable_declaration(parser);
     if (init == NULL)
         return NULL;
     
-    ASTNode * condition = parse_expression(parser);
+    struct ASTNode * condition = parse_expression(parser);
     if (condition == NULL)
         return NULL;
     
-    ASTNode * update = parse_variable_declaration(parser);
+    struct ASTNode * update = parse_variable_declaration(parser);
     if (update == NULL)
         return NULL;
     
-    ASTNode * body = parse_block(parser);
+    struct ASTNode * body = parse_block(parser);
     if (body == NULL)
         return NULL;
 
     return create_for_loop_node(init, condition, update, body);
 }
 
-ASTNode * parse_return(parser * parser)
+struct ASTNode * parse_return(parser * parser)
 {
     if(!match(parser, KEYWORD) || !match_value(parser, "return"))
         parser_error(parser, "Expected 'return' keyword", parser->errorList);
-    ASTNode * value = parse_expression(parser);
+    struct ASTNode * value = parse_expression(parser);
     if(value == NULL)
         return NULL;
     return create_return_node(value);
 }
 
-ASTNode * parse(parser * parser)
+struct ASTNode * parse(parser * parser)
 {
-    ASTNode *root = NULL;
+    struct ASTNode *root = NULL;
     while (parser->pos < parser->len) {
-        ASTNode *stmt = parse_statement(parser);
+        struct ASTNode *stmt = parse_statement(parser);
         if (stmt == NULL) {
             free_parser(parser);
             free_error_list(parser->errorList);
@@ -538,11 +549,11 @@ void free_parser_resources(parser *p) {
 
 int main()
 {
-    TokenStream *ts = tokenize();
+    TokenStream * ts = tokenize();
 
     parser *p = init_parser(ts->token_stream);
 
-    ASTNode *ast = parse(p);
+    struct ASTNode *ast = parse(p);
 
     if (ast != NULL) {
         printf("Parsing successful!\n");

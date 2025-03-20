@@ -317,9 +317,9 @@ void free_lexer(Lexer *lexer) {
 }
 
 //For testing purposes
-TokenStream tokenize() {
-    Lexer lexer = *init_lexer("int a = 5;"); // Example source code
-    TokenStream *ts = init_token_stream(malloc(sizeof(Token) * 100)); // Allocate memory for token stream
+TokenStream * tokenize() {
+    Lexer lexer = *init_lexer("int:a = 5;"); // Example source code
+    TokenStream * ts = init_token_stream(malloc(sizeof(Token) * 100)); // Allocate memory for token stream
     Token token;
     int i = 0;
     do {
@@ -328,5 +328,6 @@ TokenStream tokenize() {
         i++;
     } while (token.type != END_OF_FILE);
     free_lexer(&lexer);
-    return *ts;
+
+    return ts;
 }
