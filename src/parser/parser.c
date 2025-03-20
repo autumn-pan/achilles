@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include "../lexer/lexer.c"
-#include "../lexer/tokens.c"
-#include "../ast/ast.c"
+#include "./lexer/lexer.h"
+#include "./lexer/tokens.c"
+#include "../ast/ast.h"
 #include "../error_handling.c"
 
 typedef struct {
@@ -19,6 +19,9 @@ parser *init_parser(Token *tokenstream) {
     parser *p = malloc(sizeof(parser));
     p->pos = 0;
     p->len = 0;
+    while (tokenstream[p->len].type != END_OF_FILE) {
+        p->len++;
+    }
     p->tokenstream = tokenstream;
     p->errorList = create_error_list();
     return p;
@@ -73,10 +76,8 @@ bool is_end_of_term(Token *token) {
 
 // Function to get the next token
 Token *get_next_token(parser *p) {
-    if (p->pos < p->len - 1) {
-        Token * val = &p->tokenstream[p->pos];
-        p->pos++;
-        return val;
+    if (p->pos < p->len) {
+        return &p->tokenstream[p->pos++];
     }
     return NULL;
 }
@@ -100,7 +101,6 @@ bool match(parser *p, enum TOKEN_TYPE type) {
         p->pos++;
         return true;
     }
-    parser_error(p, "Unexpected token type", p->errorList);
     return false;
 }
 
@@ -110,7 +110,6 @@ bool match_value(parser *p, char *value) {
         p->pos++;
         return true;
     }
-    parser_error(p, "Unexpected token value", p->errorList);
     return false;
 }
 
@@ -155,23 +154,7 @@ ASTNode * parse_variable_declaration(parser *parser) {
         if(!match(parser, SEMI))
             parser_error(parser, "Expected ';'", parser->errorList);
     }
-    switch(token.type) {
-        case INT_LITERAL:
-            create_variable_declaration_node(token.value, NULL);
-            break;
-        case STR_LITERAL:
-            create_variable_declaration_node(token.value, NULL);
-            break;
-        case CHAR_LITERAL:
-            create_variable_declaration_node(token.value, NULL);
-            break;
-        case BOOL_LITERAL:
-            create_variable_declaration_node(token.value, NULL);
-            break;
-        default:
-            break;
-    }
-    ASTNode *node;
+    ASTNode *node = NULL;
     switch(token.type) {
         case INT_LITERAL:
             node = create_int_node(token.value);
@@ -186,7 +169,6 @@ ASTNode * parse_variable_declaration(parser *parser) {
             node = create_bool_node(token.value);
             break;
         default:
-            null = true;
             break;
     }
     return create_variable_declaration_node(token.value, node);
@@ -205,8 +187,8 @@ ASTNode * parse_function_declaration(parser * parser)
 {
 
     char * name;
-    ASTNode * args;
-    ASTNode * body;
+    ASTNode * args = NULL;
+    ASTNode * body = NULL;
     if(!match_value(parser, "function") || !match(parser, KEYWORD))
         parser_error(parser, "Expected 'function' keyword", parser->errorList);
     if(!match(parser, IDENTIFIER))
@@ -248,8 +230,7 @@ ASTNode * parse_function_declaration(parser * parser)
 ASTNode * parse_function_call(parser * parser)
 {
     Token token = *get_current_token(parser);
-
-    ASTNode * args;
+    ASTNode * args = NULL;
 
     if(!match(parser, KEYWORD))
         parser_error(parser, "Expected function call keyword", parser->errorList);
@@ -303,11 +284,11 @@ ASTNode * parse_class_declaration(parser *parser)
 
 ASTNode * parse_constructor_declaration(parser *parser)
 {
+    ASTNode * args = NULL;
     if(!match(parser, KEYWORD) || !match_value(parser, "constructor"))
         parser_error(parser, "Expected 'constructor' keyword", parser->errorList);
     if(!match(parser, LPAR))
         parser_error(parser, "Expected '('", parser->errorList);
-    ASTNode * args;
     while(!match(parser, RPAR))
     {
         ASTNode * arg = parse_variable_declaration(parser);
@@ -328,7 +309,7 @@ ASTNode * parse_constructor_declaration(parser *parser)
 
 ASTNode * parse_block(parser * parser)
 {
-    ASTNode * body;
+    ASTNode * body = NULL;
     int numChildren = 0;
 
     if(!match(parser, LBRACE))
@@ -423,61 +404,61 @@ ASTNode * parse_else(parser *parser)
     return create_else_node(body);
 }
 // Parses the expression
-ASTNode * parse_expression(parser * parser)
-{
+ASTNode * parse_expression(parser * parser) {
     ASTNode * left = parse_term(parser);
-    ASTNode * node = left;
+    if (left == NULL) return NULL;
 
-    while(!match(parser, RPAR) && !match(parser, SEMI) && !match(parser, EOL) && !match(parser, EOF))
-    {
+    while (!is_end_of_term(get_current_token(parser))) {
         Token token = *get_current_token(parser);
-        
+        if (token.type != OPERATOR) break;
+
+        advance_parser(parser);
         ASTNode * right = parse_term(parser);
-        if(right == NULL)
-            return NULL;
-        ASTNode * newnode = create_binary_operator_node(token.value, left, right);
-        node = newnode;
+        if (right == NULL) return NULL;
+
+        left = create_binary_operator_node(token.value, left, right);
     }
 
-    return node;
+    return left;
 }
 
 // Parses each term in the expression
-ASTNode * parse_term(parser * parser)
-{
+ASTNode * parse_term(parser * parser) {
     ASTNode * node = parse_factor(parser);
+    if (node == NULL) return NULL;
 
-    while(!is_end_of_term(advance_parser(parser)))
-    {
+    while (!is_end_of_term(get_current_token(parser))) {
         Token token = *get_current_token(parser);
+        if (token.type != OPERATOR) break;
+
+        advance_parser(parser);
         ASTNode * right = parse_factor(parser);
-        if(right == NULL)
-            return NULL;
-            
-        ASTNode * newnode = create_binary_operator_node(token.value, node, right);
-        node = newnode;
+        if (right == NULL) return NULL;
+
+        node = create_binary_operator_node(token.value, node, right);
     }
+
     return node;
 }
 
 
-ASTNode * parse_factor(parser * parser)
-{
-    if(match(parser, LPAR))
-    {
-        return parse_expression(parser);
+ASTNode * parse_factor(parser * parser) {
+    if (match(parser, LPAR)) {
+        ASTNode * expr = parse_expression(parser);
+        if (!match(parser, RPAR)) {
+            parser_error(parser, "Expected ')'", parser->errorList);
+            return NULL;
+        }
+        return expr;
     }
-    
-    else if(parse_literal(parser) != NULL)
-        return parse_literal(parser);
-    else if(parse_variable_call(parser) != NULL)
-        return parse_variable_call(parser);
-    else if(parse_function_call(parser) != NULL)
-        return parse_function_call(parser);
+
+    ASTNode * node = NULL;
+    if ((node = parse_literal(parser)) != NULL) return node;
+    if ((node = parse_variable_call(parser)) != NULL) return node;
+    if ((node = parse_function_call(parser)) != NULL) return node;
 
     parser_error(parser, "Expected a factor", parser->errorList);
     return NULL;
-
 }
 
 ASTNode * parse_while_loop(parser * parser)
@@ -533,20 +514,39 @@ ASTNode * parse_return(parser * parser)
 
 ASTNode * parse(parser * parser)
 {
-    ASTNode * root = NULL;
-    while(parser->pos < parser->len)
-    {
-        ASTNode * stmt = parse_statement(parser);
-        if(stmt == NULL)
+    ASTNode *root = NULL;
+    while (parser->pos < parser->len) {
+        ASTNode *stmt = parse_statement(parser);
+        if (stmt == NULL) {
+            free_parser(parser);
+            free_error_list(parser->errorList);
             return NULL;
-        if(root == NULL)
+        }
+        if (root == NULL)
             root = stmt;
         else
             append_node(root, stmt);
     }
-    return root;
 
-    free_parser(parser);
-    free_error_list(parser->errorList);
-    return NULL;
+    return root;
+}
+
+void free_parser_resources(parser *p) {
+    free_parser(p);
+    free_error_list(p->errorList);
+}
+
+int main()
+{
+    TokenStream *ts = tokenize();
+
+    parser *p = init_parser(ts->token_stream);
+
+    ASTNode *ast = parse(p);
+
+    if (ast != NULL) {
+        printf("Parsing successful!\n");
+    } else {
+        printf("Parsing failed!\n");
+    }
 }

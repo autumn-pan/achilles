@@ -1,5 +1,6 @@
 typedef struct ASTNode;
 typedef enum NodeType;
+
 ASTNode * create_variable_declaration_node(char *identifier, ASTNode *value);
 ASTNode * create_variable_call_node(ASTNode * id);
 ASTNode * create_function_call_node(char *id, ASTNode *args);

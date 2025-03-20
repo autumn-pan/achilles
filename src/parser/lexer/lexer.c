@@ -317,26 +317,16 @@ void free_lexer(Lexer *lexer) {
 }
 
 //For testing purposes
-int main() {
-    Lexer *lexer = init_lexer("int:num = 5");
+TokenStream tokenize() {
+    Lexer lexer = *init_lexer("int a = 5;"); // Example source code
+    TokenStream *ts = init_token_stream(malloc(sizeof(Token) * 100)); // Allocate memory for token stream
     Token token;
-
-    while (token.type != END_OF_FILE)  // While the lexer is not at the end of the file 
-    {
-        // Skip whitespace
-        while (isWhitespace(lexer))
-            advance(lexer);
-
-        // Take the next token
-        token = nextToken(lexer);
-
-        // Print the token
-        printf("Type: %s, Value: %s \n", getTokenType(token.type), token.value);
-
-        // Free the allocated memory
-        free(token.value);
-    }
-
-    free(lexer);
-    return 0;
+    int i = 0;
+    do {
+        token = nextToken(&lexer);
+        ts = append_token_string(ts, &token);
+        i++;
+    } while (token.type != END_OF_FILE);
+    free_lexer(&lexer);
+    return *ts;
 }

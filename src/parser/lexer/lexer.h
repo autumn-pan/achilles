@@ -1,7 +1,23 @@
-typedef struct Token;
-typedef struct TokenStream;
-typedef struct Lexer;
-typedef struct parser;
+typedef struct {
+    enum TOKEN_TYPE type;
+    char *value;
+    int line;
+    int column;
+} Token;
+
+typedef struct {
+    Token * token_stream;
+} TokenStream;
+                                                                                                                                                    
+typedef struct {
+    const char *src;  // Pointer to source code
+    int length;          // Length of source code
+    int pos;        // Current index in source
+    int line;            // Line number for error reporting
+    int column;          // Column number for debugging
+} Lexer;
+
+struct parser;
 bool alphanum(char c);
 bool alpha(char c);
 bool num(char c);
@@ -18,3 +34,4 @@ bool match(Lexer *p, enum TOKEN_TYPE type);
 bool match_value(Lexer *p, const char *value);
 Token *get_current_token(Lexer *p);
 Token *get_next_token(Lexer *p);
+TokenStream tokenize();
