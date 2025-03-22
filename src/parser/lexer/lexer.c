@@ -6,18 +6,6 @@
 #include "lexer.h"
 
 
-//This defines the structure of a token
-typedef struct {
-    enum TOKEN_TYPE type;
-    char *value;
-    int line;
-    int column;
-} Token;
-
-typedef struct {
-    Token * token_stream;
-} TokenStream;
-
 void free_token_stream(TokenStream * ts)
 {
     free(ts->token_stream);
@@ -86,14 +74,6 @@ bool num(char c)
 
 
 
-// Structure for a lexer
-typedef struct {
-    const char *src;  // Pointer to source code
-    int length;          // Length of source code
-    int pos;        // Current index in source
-    int line;            // Line number for error reporting
-    int column;          // Column number for debugging
-} Lexer;
 
 // Initialize the lexer
 Lexer * init_lexer(const char *src) {

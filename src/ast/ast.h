@@ -1,9 +1,70 @@
+#ifndef AST_H
+#define AST_H
+
 typedef struct ASTNode;
-typedef enum NodeType;
+
+typedef enum {
+    PROGRAM,
+    STATEMENT,
+    EXPRESSION,
+
+    FOR_LOOP_STMT,
+    WHILE_LOOP_STMT,
+    BLOCK,
+    IF_STMT,
+    ELSE_IF_STMT,
+    ELSE_STMT,
+
+    FUNCTION_DECL,
+    FUNCTION_CALL,
+
+    CLASS_DECL,
+    CONSTRUCTOR_DECL,
+    CONSTRUCTOR_CALL,
+    VARIABLE_DECL,
+    VARIABLE_CALL,
+
+    INT,
+    FLOAT,
+    STRING,
+    BOOL,
+    CHAR,
+
+    ADD,
+    SUB,
+    MULT,
+    DIV,
+    MOD,
+
+    ASSIGN,
+    PLUS_EQUAL,
+    MINUS_EQUAL,
+
+    NOT,
+    AND,
+    OR,
+
+    LESS,
+    GREATER,
+    LESS_EQUAL,
+    GREATER_EQUAL,
+    EQUAL,
+
+    BIT_AND,
+    BIT_OR,
+    BIT_XOR,
+    BIT_NOT,
+    LEFT_SHIFT,
+    RIGHT_SHIFT,
+
+    INSTANCEOF,
+
+    CONCATENATE
+} NodeType
 ASTNode * create_variable_declaration_node(char *identifier, ASTNode *value);
 ASTNode * create_variable_call_node(ASTNode * id);
 ASTNode * create_function_call_node(char *id, ASTNode *args);
-ASTNode * create_function_declaration_node(char *id, ASTNode *args, ASTNode *body);
+ASTNode * create_function_declaration_node(char *id, char * datatype, ASTNode *args, ASTNode *body);
 ASTNode * create_class_declaration_node(char *id, ASTNode *body);
 ASTNode * create_constructor_declaration_node(ASTNode * args, ASTNode * body);
 ASTNode * create_if_node(ASTNode * condition, ASTNode * body);
@@ -19,3 +80,4 @@ ASTNode * create_boolean_node(int boolean);
 ASTNode * create_binary_operator_node(NodeType op, ASTNode *left, ASTNode *right);
 ASTNode * create_unary_operator_node(char *op);
 ASTNode * create_constructor_call_node(char *id);
+#endif

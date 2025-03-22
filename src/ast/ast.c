@@ -1,79 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "../lexer/lexer.c"
-#include "../lexer/tokens.c"
-
-// Define the types of AST nodes
-typedef enum {
-    PROGRAM,
-    STATEMENT,
-    EXPRESSION,
-    INT,
-    FLOAT,
-    STRING,
-    BOOL,
-    CHAR,
-    ADD,
-    SUB,
-    MULT,
-    DIV,
-    MOD,
-
-    ASSIGN,
-    PLUS_EQUAL,
-    MINUS_EQUAL,
-
-    NOT,
-    AND,
-    OR,
-
-    LESS,
-    GREATER,
-    LESS_EQUAL,
-    GREATER_EQUAL,
-    EQUAL,
-
-    BIT_AND,
-    BIT_OR,
-    BIT_XOR,
-    BIT_NOT,
-    LEFT_SHIFT,
-    RIGHT_SHIFT,
-
-    INSTANCEOF,
-
-    CONCATENATE
-} NodeType;
-
-// Define the types of statements
-typedef enum {
-    RETURN_STMT,
-    IF_STMT,
-    ELSE_IF_STMT,
-    ELSE_STMT,
-    WHILE_STMT,
-    FOR_STMT,
-    BREAK_STMT,
-    CONTINUE_STMT,
-
-    FUNCTION_DECL,
-    CONSTRUCTOR_DECL,
-    CLASS_DECL,
-    VARIABLE_DECL,
-
-    ASSIGNMENT_STMT,
-    EXPRESSION_STMT,
-    BLOCK_STMT,
-
-    FUNCTION_CALL,
-    CONSTRUCTOR_CALL,
-    VARIABLE_CALL,
-} StatementType;
-
+#include "../parser/lexer/lexer.h"
+#include "../parser/lexer/tokens.c"
+#include "./ast.h"
 // Define the structure of an AST node
-typedef struct ASTNode {
+typedef struct {
+    char * identifier;
+    char * datatype;
+} IdentifierData;
+
+typedef struct {
     NodeType type;
-    struct ASTNode **children;
+    ASTNode **children;
+
     int numChildren;
 
     union {
@@ -81,10 +20,7 @@ typedef struct ASTNode {
         float floatval;
         char *strval;
         char charval;
-        typedef struct {
-            char * identifier;
-            char * datatype;
-        } IdentifierData;
+        IdentifierData IdentifierData;
         char *operator;
     } data;
 } ASTNode;
@@ -124,7 +60,7 @@ ASTNode* create_char_node(char c) {
     return node;
 }
 
-ASTNode* create_string_node(int str) {
+ASTNode* create_string_node(char * str) {
     ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = STRING;
     node->data.strval = strdup(str);
@@ -152,7 +88,7 @@ ASTNode* create_binary_operator_node(NodeType op, ASTNode *left, ASTNode *right)
 
 ASTNode* create_unary_operator_node(char *op) {
     ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));
-    node->type = OPERATOR;
+    node->type = op;
     node->data.operator = strdup(op);
     node->numChildren = 1;
     node->children = (ASTNode**)malloc(sizeof(ASTNode*) * 1);
@@ -162,9 +98,9 @@ ASTNode* create_unary_operator_node(char *op) {
 ASTNode* create_function_call_node(char *id, ASTNode *args) {
     ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = FUNCTION_CALL;
-    node->data.identifier = strdup(id);
+    node->data.IdentifierData.identifier = strdup(id);
     node->numChildren = 1;
-    node->children = (ASTNode**)malloc(sizeof(ASTNode*));
+    node->children = (ASTNode**)malloc(sizeof(ASTNode));
     node->children[0] = args;
     return node;
 }
@@ -181,25 +117,8 @@ ASTNode* create_variable_declaration_node(char *id, ASTNode *value) {
     node->type = VARIABLE_DECL;
     node->data.IdentifierData.identifier = init_identifier(strdup(id), type_to_string(value->type));
     node->numChildren = 1;
-    node->value = value;
     node->children = (ASTNode**)malloc(sizeof(ASTNode*) * 1);
-    switch(value->type) {
-        case INT_LITERAL:
-            node->children[0] = createIntNode(value->data.intval);
-            break;
-        case FLOAT_LITERAL:
-            node->children[0] = createFloatNode(value->data.floatval);
-            break;
-        case CHAR_LITERAL:
-            node->children[0] = createCharNode(value->data.charval);
-            break;
-        case STR_LITERAL:
-            node->children[0] = createStringNode(value->data.strval);
-            break;
-        case BOOL_LITERAL:
-            node->children[0] = createBoolNode(value->data.intval);
-            break;
-    }
+    node->children[0] = value;
     return node;
 }
 ASTNode * create_variable_call_node(ASTNode * id)
@@ -213,9 +132,9 @@ ASTNode * create_variable_call_node(ASTNode * id)
 ASTNode* create_function_declaration_node(char *id, char *datatype, ASTNode *args, ASTNode *body) {
     ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = FUNCTION_DECL;
-    node->data.IdentifierData.identifier = init_identifier(strdup(id), NULL)
+    node->data.IdentifierData = init_identifier(strdup(id), strdup(datatype));
     node->numChildren = 2;
-    node->children = (ASTNode**)malloc(sizeof(ASTNode*) * 2);
+    node->children = (ASTNode**)malloc(sizeof(ASTNode) * 2);
     node->children[0] = args;
     node->children[1] = body;
     return node;
@@ -224,9 +143,9 @@ ASTNode* create_function_declaration_node(char *id, char *datatype, ASTNode *arg
 ASTNode * create_class_declaration_node(char *id, ASTNode *body) {
     ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = CLASS_DECL;
-    node->data.IdentifierData.identifier = init_identifier(strdup(id), NULL)
+    node->data.IdentifierData = init_identifier(strdup(id), NULL);
     node->numChildren = 1;
-    node->children = (ASTNode**)malloc(sizeof(ASTNode*));
+    node->children = (ASTNode**)malloc(sizeof(ASTNode));
     node->children[0] = body;
     return node;
 }
@@ -286,7 +205,7 @@ ASTNode * create_while_loop_node(ASTNode * condition, ASTNode * body)
 {
     ASTNode * node = malloc(sizeof(ASTNode));
 
-    node->type = WHILE_STMT;
+    node->type = WHILE_LOOP_STMT;
     node->numChildren = 2;
     node->children = malloc(sizeof(ASTNode*) * 2);
     node->children[0] = condition;
@@ -297,7 +216,7 @@ ASTNode * create_for_loop_node(ASTNode * init, ASTNode * condition, ASTNode * up
 {
     ASTNode * node = malloc(sizeof(ASTNode));
 
-    node->type = FOR_STMT;
+    node->type = FOR_LOOP_STMT;
     node->numChildren = 4;
     node->children = malloc(sizeof(ASTNode*) * 4);
     
@@ -312,7 +231,7 @@ ASTNode * create_block_node(ASTNode ** statements, int numStatements)
 {
     ASTNode * node = malloc(sizeof(ASTNode));
 
-    node->type = BLOCK_STMT;
+    node->type = BLOCK;
     node->numChildren = numStatements;
     node->children = malloc(sizeof(ASTNode*) * numStatements);
     for(int i = 0; i < numStatements; i++)

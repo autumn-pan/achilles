@@ -1,3 +1,5 @@
+#ifndef TOKENS_C
+#define TOKENS_C
 #include <stdbool.h>
 //This file contains the tokens for the lexer, as well as keywords, operators, and grouper tokens.
 typedef enum TOKEN_TYPE{
@@ -126,3 +128,4 @@ const char* getTokenType(enum TOKEN_TYPE type) {
         default: return "UNKNOWN";
     }
 }
+#endif
