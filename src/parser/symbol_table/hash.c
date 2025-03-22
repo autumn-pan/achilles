@@ -7,7 +7,7 @@ unsigned long hash(char * key, unsigned long hash_limit)
 {
     unsigned long hash = 5381;
     int c;
-    while (c = *str++)
+    while (c = *key++)
         hash = ((hash << 5) + hash) + c;
 
     return hash % hash_limit;
