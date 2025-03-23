@@ -10,7 +10,7 @@ typedef struct
 {
     unsigned long hash;
     char * identifier;
-    enum Modifiers * modifiers;
+    Modifiers * modifiers;
     char * type;
     char * datatype;
     char * key;
@@ -27,16 +27,16 @@ typedef struct
 } SymbolTable;
 
 // Constructor for a symbol
-Symbol init_symbol(ASTNode * node)
+Symbol init_symbol(ASTNode * node, unsigned long hash_limit)
 {
-    char * id = node->data.identifier;
+    char * id = strdup(node->data.IdentifierData.identifier);
     char * type = type_to_string(node->type);
     char * datatype = NULL;
     char * key;
 
     // Set symbol data type
     if(node->type == VARIABLE_DECL || node->type == FUNCTION_DECL)
-        datatype = node->data.IdentifierData.type;
+        datatype = node->data.IdentifierData->type;
 
     // Evaluate the key of the symbol
     if(node->type == FUNCTION_DECL)
@@ -148,7 +148,7 @@ unsigned long get_symbol_position(SymbolTable * table, char * key)
 }
 
 
-void delete_symbol(SymbolTable table, char * key)
+void delete_symbol(SymbolTable * table, char * key)
 {
     if(!search_symbol(table, key))
         exit(EXIT_FAILURE);
@@ -171,7 +171,7 @@ char * key_function( ASTNode * node)
 
     if (node->type == FUNCTION_DECL)
     {
-        strcat(key, node->data.identifier);
+        strcat(key, node->data.IdentifierData->identifier);
 
         int i = 0;
         while(i < node->numChildren)
@@ -194,7 +194,7 @@ char * key_variable( ASTNode * node)
     char key[256] = "";
     if (node->type == VARIABLE_DECL)
     {
-        strcat(key, node->data.identifier);
+        strcat(key, node->data.IdentifierData.identifier);
         strcat(key, node->children[0]->type);
 
         return key;
@@ -271,7 +271,7 @@ int main() {
     for (unsigned long i = 0; i < table->hash_limit; i++) {
         if (table->data[i] != NULL) {
             printf("Index %lu: Key = %s, Type = %s, Datatype = %s\n",
-                   i, table->data[i].key, table->data[i].type, table->data[i].datatype);
+                   i, table->data[i]->key, table->data[i]->type, table->data[i]->datatype);
         }
     }
 
