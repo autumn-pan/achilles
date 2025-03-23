@@ -2,7 +2,8 @@
 #include <string.h>
 #include "./symbol_table.h"
 #include "./hash.c"
-#include "../../ast/ast.c"
+#include "../../ast/ast.h"
+
 
 // The symbol struct represents an individual entry in a symbol table
 typedef struct 

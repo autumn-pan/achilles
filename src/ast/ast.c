@@ -3,40 +3,21 @@
 #include "../parser/lexer/lexer.h"
 #include "../parser/lexer/tokens.c"
 #include "./ast.h"
-// Define the structure of an AST node
-typedef struct {
-    char * identifier;
-    char * datatype;
-} IdentifierData;
-
-typedef struct {
-    NodeType type;
-    ASTNode **children;
-
-    int numChildren;
-
-    union {
-        int intval;
-        float floatval;
-        char *strval;
-        char charval;
-        IdentifierData IdentifierData;
-        char *operator;
-    } data;
-} ASTNode;
 
 
-IdentifierData init_identifier(char *id, char*type)
+
+
+IdentifierData * init_identifier(char *id, char*type)
 {
-    IdentifierData data = (IdentifierData)malloc(sizeof(ASTNode));
-    data.identifier = strdup(id);
-    data.datatype = strdup(type);
+    IdentifierData * data = (IdentifierData*)malloc(sizeof(IdentifierData));
+    data->identifier = strdup(id);
+    data->datatype = strdup(type);
 }
 
-void free_identifier(IdentifierData id)
+void free_identifier(IdentifierData * id)
 {
-    free(id.identifier);
-    free(id.datatype);
+    free(id->identifier);
+    free(id->datatype);
 }
 
 ASTNode* create_int_node(int num) {
@@ -46,7 +27,7 @@ ASTNode* create_int_node(int num) {
     return node;
 }
 
-ASTNode* create_float_node(int num) {
+ASTNode* create_float_node(float num) {
     ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = FLOAT;
     node->data.floatval = num;
@@ -67,10 +48,10 @@ ASTNode* create_string_node(char * str) {
     return node;
 }
 
-ASTNode* create_boolean_node(int boolean) {
+ASTNode* create_boolean_node(bool boolean) {
     ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = BOOL;
-    node->data.intval = boolean;
+    node->data.boolval = boolean;
     return node;
 }
 
@@ -78,7 +59,7 @@ ASTNode* create_binary_operator_node(NodeType op, ASTNode *left, ASTNode *right)
     ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = op;
     node->numChildren = 2;
-    node->children = (ASTNode**)malloc(sizeof(ASTNode*) * 2);
+    node->children = (ASTNode**)malloc(sizeof(ASTNode) * 2);
 
     node->children[0] = left;
     node->children[1] = right;
@@ -86,19 +67,19 @@ ASTNode* create_binary_operator_node(NodeType op, ASTNode *left, ASTNode *right)
 }
 
 
-ASTNode* create_unary_operator_node(char *op) {
+ASTNode* create_unary_operator_node(NodeType op, ASTNode * child) {
     ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = op;
-    node->data.operator = strdup(op);
     node->numChildren = 1;
-    node->children = (ASTNode**)malloc(sizeof(ASTNode*) * 1);
+    node->children = (ASTNode**)malloc(sizeof(ASTNode) * 1);
+    node->children[0] = child;
     return node;
 }
 
 ASTNode* create_function_call_node(char *id, ASTNode *args) {
     ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = FUNCTION_CALL;
-    node->data.IdentifierData.identifier = strdup(id);
+    node->data.IdentifierData = init_identifier(strdup(id), NULL);
     node->numChildren = 1;
     node->children = (ASTNode**)malloc(sizeof(ASTNode));
     node->children[0] = args;
@@ -108,24 +89,25 @@ ASTNode* create_function_call_node(char *id, ASTNode *args) {
 ASTNode* create_constructor_call_node(char *id) {
     ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = CONSTRUCTOR_CALL;
-    node->data.IdentifierData.identifier = init_identifier(strdup(id), NULL);
+    node->data.IdentifierData = init_identifier(strdup(id), NULL);
     return node;
 }
 
 ASTNode* create_variable_declaration_node(char *id, ASTNode *value) {
     ASTNode *node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = VARIABLE_DECL;
-    node->data.IdentifierData.identifier = init_identifier(strdup(id), type_to_string(value->type));
+    node->data.IdentifierData = init_identifier(strdup(id), type_to_string(value->type));
     node->numChildren = 1;
     node->children = (ASTNode**)malloc(sizeof(ASTNode*) * 1);
     node->children[0] = value;
     return node;
 }
+
 ASTNode * create_variable_call_node(ASTNode * id)
 {
     ASTNode * node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = VARIABLE_CALL;
-    node->data.IdentifierData.identifier = init_identifier(strdup(id.data.IdentifierData.identifier), NULL)
+    node->data.IdentifierData = init_identifier(strdup(id->data.IdentifierData->identifier), NULL);
     return node;
 }
 

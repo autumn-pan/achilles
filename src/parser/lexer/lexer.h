@@ -1,5 +1,8 @@
 #ifndef LEXER_H
 #define LEXER_H
+#include "./tokens.c"
+#include <stdbool.h>
+
 typedef struct {
     enum TOKEN_TYPE type;
     char *value;

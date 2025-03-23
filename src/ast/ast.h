@@ -1,7 +1,6 @@
 #ifndef AST_H
 #define AST_H
 
-typedef struct ASTNode;
 
 typedef enum {
     PROGRAM,
@@ -60,7 +59,30 @@ typedef enum {
     INSTANCEOF,
 
     CONCATENATE
-} NodeType
+} NodeType;
+typedef struct {
+    char * identifier;
+    char * datatype;
+} IdentifierData;
+
+typedef struct ASTNode {
+    enum NodeType type;
+    struct ASTNode **children;
+
+    int numChildren;
+
+    union {
+        int intval;
+        float floatval;
+        char *strval;
+        char charval;
+        bool boolval;
+        IdentifierData * IdentifierData;
+        char *operator;
+    } data;
+} ASTNode;
+
+char * type_to_string(NodeType type);
 ASTNode * create_variable_declaration_node(char *identifier, ASTNode *value);
 ASTNode * create_variable_call_node(ASTNode * id);
 ASTNode * create_function_call_node(char *id, ASTNode *args);
@@ -74,10 +96,12 @@ ASTNode * create_while_loop_node(ASTNode * condition, ASTNode * body);
 ASTNode * create_for_loop_node(ASTNode * init, ASTNode * condition, ASTNode * update, ASTNode * body);
 ASTNode * create_block_node(ASTNode ** statements, int numStatements);
 ASTNode * create_return_node(ASTNode * value);
-ASTNode * create_int_node(int value);
-ASTNode * create_string_node(int str);
-ASTNode * create_boolean_node(int boolean);
+ASTNode * create_int_node(int num);
+ASTNode * create_string_node(char * str);
+ASTNode * create_float_node(float num);
+ASTNode * create_boolean_node(bool boolean);
 ASTNode * create_binary_operator_node(NodeType op, ASTNode *left, ASTNode *right);
-ASTNode * create_unary_operator_node(char *op);
+ASTNode * create_unary_operator_node(NodeType op, ASTNode * child);
 ASTNode * create_constructor_call_node(char *id);
+
 #endif

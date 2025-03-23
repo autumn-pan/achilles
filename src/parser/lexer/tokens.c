@@ -106,7 +106,6 @@ const char GROUPER_TOKENS[] = {//List of grouper values
 const char* getTokenType(enum TOKEN_TYPE type) {
     switch (type) {
         case END_OF_FILE: return "END_OF_FILE";
-        case STR_LITERAL: return "STR_LITERAL";
         case KEYWORD: return "KEYWORD";
         case IDENTIFIER: return "IDENTIFIER";
         case FLOAT_LITERAL: return "float";
