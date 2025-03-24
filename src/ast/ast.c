@@ -215,7 +215,7 @@ ASTNode * create_block_node(ASTNode ** statements, int numStatements)
 
     node->type = BLOCK;
     node->numChildren = numStatements;
-    node->children = malloc(sizeof(ASTNode*) * numStatements);
+    node->children = (ASTNode**)malloc(sizeof(ASTNode) * numStatements);
     for(int i = 0; i < numStatements; i++)
     {
         node->children[i] = statements[i];

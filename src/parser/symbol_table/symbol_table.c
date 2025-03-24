@@ -3,14 +3,13 @@
 #include "./symbol_table.h"
 #include "./hash.c"
 #include "../../ast/ast.h"
-
+#include <limits.h>
 
 // The symbol struct represents an individual entry in a symbol table
-typedef struct 
-{
+typedef struct Symbol {
     unsigned long hash;
     char * identifier;
-    Modifiers * modifiers;
+    enum Modifiers modifiers;
     char * type;
     char * datatype;
     char * key;
@@ -27,16 +26,16 @@ typedef struct
 } SymbolTable;
 
 // Constructor for a symbol
-Symbol init_symbol(ASTNode * node, unsigned long hash_limit)
+Symbol * init_symbol(ASTNode * node, unsigned long hash_limit)
 {
-    char * id = strdup(node->data.IdentifierData.identifier);
+    char * id = strdup(node->data.IdentifierData->identifier);
     char * type = type_to_string(node->type);
     char * datatype = NULL;
     char * key;
 
     // Set symbol data type
     if(node->type == VARIABLE_DECL || node->type == FUNCTION_DECL)
-        datatype = node->data.IdentifierData->type;
+        datatype = node->data.IdentifierData->datatype;
 
     // Evaluate the key of the symbol
     if(node->type == FUNCTION_DECL)
@@ -44,11 +43,8 @@ Symbol init_symbol(ASTNode * node, unsigned long hash_limit)
     else if (node->type == VARIABLE_DECL)
         key = key_variable(node);
 
-    // Evaluate the hash
-    unsigned long hash = hash(key, hash_limit);
-
     // Construct the symbol
-    Symbol symbol = (Symbol*)malloc(sizeof(Symbol));
+    Symbol *symbol = (Symbol *)malloc(sizeof(Symbol));
     symbol->identifier = strdup(id);
     symbol->type = strdup(type);
     if (datatype != NULL)
@@ -69,9 +65,9 @@ SymbolTable* init_symbol_table()
     table->symbol_count = 0;
 
     table->hash_limit = 128;
-    table->data = (Symbol *)malloc(sizeof(Symbol)*table->hash_limit);
+    table->data = (Symbol **)malloc(sizeof(Symbol)*table->hash_limit);
 
-    return *table;
+    return table;
 }
 
 void insert_symbol(SymbolTable *table, Symbol * symbol) 
@@ -80,7 +76,7 @@ void insert_symbol(SymbolTable *table, Symbol * symbol)
 
     unsigned long index = symbol->hash;
 
-    while (table[index] != NULL) {
+    while (table->data[index] != NULL) {
         index = (index + 1) % table->hash_limit;
     }
 
@@ -91,13 +87,13 @@ void insert_symbol(SymbolTable *table, Symbol * symbol)
     {
         table->hash_limit *= 2;
 
-        Symbol *tmp = (Symbol *)malloc(sizeof(Symbol) * table->hash_limit);
+        Symbol ** tmp = (Symbol **)malloc(sizeof(Symbol) * table->hash_limit);
 
         // Rehash all symbols
         for (int i = 0; i < table->hash_limit / 2; i++) 
         {
             if (table->data[i] != NULL) {
-                int new_index = hash(table->data[i].key, table->hash_limit);
+                int new_index = hash_key(table->data[i]->key, table->hash_limit);
 
                 // Handle collisions by linear probing
                 while (tmp[new_index] != NULL) {
@@ -114,13 +110,13 @@ void insert_symbol(SymbolTable *table, Symbol * symbol)
 }
 
 bool search_symbol(SymbolTable *table, char *key) {
-    int index = hash(key, table->hash_limit);
+    int index = hash_key(key, table->hash_limit);
 
     // Resolve collisions via linear probing
     while (table->data[index] != NULL) 
     {
         if (strcmp(table->data[index]->key, key) == 0) {
-            return true
+            return true;
         }
         index = (index + 1) % table->hash_limit;
     }
@@ -128,11 +124,12 @@ bool search_symbol(SymbolTable *table, char *key) {
     // If key is not found,
     return false;
 }
+
 unsigned long get_symbol_position(SymbolTable * table, char * key)
 {
-    unsigned long hash = hash(key, table->hash_limit);
+    unsigned long hash = hash_key(key, table->hash_limit);
 
-    int index = hash(key, table->hash_limit);
+    int index = hash_key(key, table->hash_limit);
 
     while (table->data[index] != NULL) 
     {
@@ -144,7 +141,7 @@ unsigned long get_symbol_position(SymbolTable * table, char * key)
         index = (index + 1) % table->hash_limit;
     }
 
-    return NULL;
+    return ULONG_MAX;
 }
 
 
@@ -176,7 +173,7 @@ char * key_function( ASTNode * node)
         int i = 0;
         while(i < node->numChildren)
         {
-            strcat(params, node->children[i]->children[0]->type);
+            strcat(params, node->children[i]->children[0]->data.IdentifierData->datatype);
 
             strcat(params, ", ");
         }
@@ -194,8 +191,8 @@ char * key_variable( ASTNode * node)
     char key[256] = "";
     if (node->type == VARIABLE_DECL)
     {
-        strcat(key, node->data.IdentifierData.identifier);
-        strcat(key, node->children[0]->type);
+        strcat(key, node->data.IdentifierData->identifier);
+        strcat(key, node->children[0]->data.IdentifierData->datatype);
 
         return key;
     }
@@ -218,9 +215,9 @@ void free_symbol_table(SymbolTable *table) {
         // Free every symbol in the table
         for (unsigned long i = 0; i < table->symbol_count; i++) 
         {
-            if (table->data[i]) 
+            if (table->data[i] != NULL) 
             {
-                free_symbol(&(table->data[i])); 
+                free_symbol(table->data[i]); 
             }
         }
         //Free the table itelf
@@ -251,7 +248,7 @@ int main() {
         symbol->type = strdup(types[i]);
         symbol->datatype = strdup(datatypes[i]);
         symbol->identifier = strdup(keys[i]);  // Identifier is same as the key for simplicity
-        symbol->hash = hash(keys[i], table->hash_limit);
+        symbol->hash = hash_key(keys[i], table->hash_limit);
 
         insert_symbol(table, symbol);  // Insert symbol into the table
 

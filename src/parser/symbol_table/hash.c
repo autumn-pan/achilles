@@ -3,10 +3,10 @@
 #include <string.h>
 
 //DJB2 hash algorithm
-unsigned long hash(char * key, unsigned long hash_limit)
+unsigned long hash_key(char * key, unsigned long hash_limit)
 {
     unsigned long hash = 5381;
-    int c;
+    unsigned long c;
     while (c = *key++)
         hash = ((hash << 5) + hash) + c;
 

@@ -2,7 +2,7 @@
 #define AST_H
 
 
-typedef enum {
+typedef enum NodeType {
     PROGRAM,
     STATEMENT,
     EXPRESSION,
@@ -60,13 +60,14 @@ typedef enum {
 
     CONCATENATE
 } NodeType;
+
 typedef struct {
     char * identifier;
     char * datatype;
 } IdentifierData;
 
 typedef struct ASTNode {
-    enum NodeType type;
+    NodeType type;
     struct ASTNode **children;
 
     int numChildren;
